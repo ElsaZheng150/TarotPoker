@@ -4,12 +4,15 @@
 #include <string>
 using namespace std;
 
+//Key codes
 enum Key {
-    KEY_LEFT = 1000,
-    KEY_RIGHT,
+    KEY_UNKNOWN,
     KEY_ENTER,
     KEY_ESCAPE,
-    KEY_UNKNOWN,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_UP,
+    KEY_DOWN,
     KEY_1,
     KEY_2,
     KEY_3,
@@ -21,6 +24,5 @@ enum Key {
 
 int readKey();
 void clearScreen();
-void moveCursor(int row, int col);
 
 #endif
