@@ -4,7 +4,7 @@
 #include <string>
 using namespace std;
 
-// represents a single playing card with mutable suit and value for tarot effects
+
 struct Card {
     string suit;
     string value;
