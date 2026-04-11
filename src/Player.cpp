@@ -59,8 +59,17 @@ vector<Card>& Player::getDiscardPile() {
 //check who has the greater hand to find the winner
 void compareHands(){
     int isWinner; //check if the player won
+    bool isFlush = true; //true until proven false
+
+    //determine if hands are the same
+    //Royal flush > Straight Flush > 4 of a kind > Full House > Flush >
+    //Straight > 3 of a kind > 2 pair > pair > high card
 
 
+    //judge by higher order if hand types are the same
+    //sort by descending order
+    //compare
+    //important: suits do not break ties in standard 5 card poker
 
     //go through all possible hands and see which one is the highest
     displayWinner(isWinner); //show who won
