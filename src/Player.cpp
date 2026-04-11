@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Card.h"
 #include <iostream>
 using namespace std;
 
@@ -54,3 +55,27 @@ vector<Card>& Player::getHand() {
 vector<Card>& Player::getDiscardPile() {
     return discardPile;
 }
+
+//check who has the greater hand to find the winner
+void compareHands(){
+    int isWinner; //check if the player won
+
+
+
+    //go through all possible hands and see which one is the highest
+    displayWinner(isWinner); //show who won
+}//end of compareHands
+
+//display the player or computer that won using results from compareHands
+//win (0), lose (1), draw(2)
+void displayWinner(int whoWon){
+    if(whoWon == 0){
+        cout << "Player Wins" << endl;
+    }
+    if(whoWon == 1){
+        cout << "Player Loses" << endl;
+    }
+    if(whoWon == 2){
+        cout << "Draw" << endl;
+    }
+}//end of displayWinner
