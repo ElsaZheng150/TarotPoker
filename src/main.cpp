@@ -48,8 +48,8 @@ void drawUI(Player& player, Deck& deck, int selected, const string& message) {
 }
 
 int main() {
-    // set console to utf-8 for suit symbols
-    system("chcp 65001 > nul");
+    //set console to utf-8 for suit symbols
+    //system("chcp 65001 > nul"); removed because windows os only
     srand((unsigned int)time(0));
 
     Deck deck;
