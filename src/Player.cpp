@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Card.h"
+#include <vector>
 #include <iostream>
 using namespace std;
 
@@ -55,36 +56,3 @@ vector<Card>& Player::getHand() {
 vector<Card>& Player::getDiscardPile() {
     return discardPile;
 }
-
-//check who has the greater hand to find the winner
-void compareHands(){
-    int isWinner; //check if the player won
-    bool isFlush = true; //true until proven false
-
-    //determine if hands are the same
-    //Royal flush > Straight Flush > 4 of a kind > Full House > Flush >
-    //Straight > 3 of a kind > 2 pair > pair > high card
-
-
-    //judge by higher order if hand types are the same
-    //sort by descending order
-    //compare
-    //important: suits do not break ties in standard 5 card poker
-
-    //go through all possible hands and see which one is the highest
-    displayWinner(isWinner); //show who won
-}//end of compareHands
-
-//display the player or computer that won using results from compareHands
-//win (0), lose (1), draw(2)
-void displayWinner(int whoWon){
-    if(whoWon == 0){
-        cout << "Player Wins" << endl;
-    }
-    if(whoWon == 1){
-        cout << "Player Loses" << endl;
-    }
-    if(whoWon == 2){
-        cout << "Draw" << endl;
-    }
-}//end of displayWinner
