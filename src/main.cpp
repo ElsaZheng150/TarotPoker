@@ -83,9 +83,22 @@ void sortHand(vector<int>& hand){
 }//end of sortHand
 */
 
+bool isFlush(const vector<Card>& hand) {
+    if (hand.empty()) return false;
+
+    string suit = hand[0].suit;
+    for (size_t i = 1; i < hand.size(); i++) {
+        if (hand[i].suit != suit) return false;
+    }
+    return true;
+}
 //check if all cards share the same suit 
 bool isFlush(const vector<Card>& hand) {
     string suit = hand[0].suit; //get suit
+
+    if(hand.empty()){
+        return false; //safe guard against empty hand
+    }//end of if
 
     for (size_t i = 1; i < hand.size(); i++) {
         if (hand[i].suit != suit) {
@@ -96,11 +109,16 @@ bool isFlush(const vector<Card>& hand) {
 }//end of isFlush
 
 //check if hand forms a straight
-bool isStraight(vector<int> vals) {
-    sort(vals.begin(), vals.end()); //sort in ascending order
+bool isStraight(vector<int> values) {
+    if(values.empty()){
+        return false; //safe guard against empty hand
+    }//end of if
 
-    for (size_t i = 1; i < vals.size(); i++) { //ensure values are incrementing by only 1 value
-        if (vals[i] != vals[i - 1] + 1) {
+    sort(values.begin(), values.end()); //sort in ascending order
+
+    for (size_t i = 1; i < values.size(); i++) { //ensure values are incrementing by only 1 value
+        //not the next value or dupe will break
+        if ((values[i] != values[i - 1] + 1) || values[i] == values[i - 1]) {
             return false; //leave if not
         }//end of if statement
     }//end of for loop
