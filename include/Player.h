@@ -22,8 +22,6 @@ public:
     bool hasCards() const;
     vector<Card>& getHand();
     vector<Card>& getDiscardPile();
-    void displayWinner(int whoWon); //display the player or computer that won
-    void compareHands(); //check who has the greater hand to find the winner
 };
 
 #endif
