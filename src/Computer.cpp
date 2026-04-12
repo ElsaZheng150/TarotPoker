@@ -1,30 +1,29 @@
-#include "Player.h"
+#include "Computer.h"
 #include "Card.h"
-#include <vector>
 #include <iostream>
 using namespace std;
 
-void Player::addCard(Card card) {
+void Computer::addCard(Card card) {
     hand.push_back(card);
 }
 
 // moves card to discard pile instead so it isn't just deleted.
-void Player::discardCard(int index) {
+void Computer::discardCard(int index) {
     discardPile.push_back(hand[index]);
     hand.erase(hand.begin() + index);
 }
 
 
-void Player::changeCardValue(int index, const string& newValue, int newNumeric) {
+void Computer::changeCardValue(int index, const string& newValue, int newNumeric) {
     hand[index].value = newValue;
     hand[index].numericValue = newNumeric;
 }
 
-void Player::changeCardSuit(int index, const string& newSuit) {
+void Computer::changeCardSuit(int index, const string& newSuit) {
     hand[index].suit = newSuit;
 }
 
-void Player::displayHand() const {
+void Computer::displayHand() const {
     if (hand.empty()) {
         cout << "Your hand is empty." << endl;
         return;
@@ -36,23 +35,23 @@ void Player::displayHand() const {
     cout << endl;
 }
 
-void Player::returnAllToDeck(Deck& deck) {
+void Computer::returnAllToDeck(Deck& deck) {
     deck.returnCards(hand);
     deck.returnCards(discardPile);
 }
 
-int Player::handSize() const {
+int Computer::handSize() const {
     return (int)hand.size();
 }
 
-bool Player::hasCards() const {
+bool Computer::hasCards() const {
     return !hand.empty();
 }
 
-vector<Card>& Player::getHand() {
+vector<Card>& Computer::getHand() {
     return hand;
 }
 
-vector<Card>& Player::getDiscardPile() {
+vector<Card>& Computer::getDiscardPile() {
     return discardPile;
 }
