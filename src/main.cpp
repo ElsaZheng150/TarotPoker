@@ -83,15 +83,6 @@ void sortHand(vector<int>& hand){
 }//end of sortHand
 */
 
-bool isFlush(const vector<Card>& hand) {
-    if (hand.empty()) return false;
-
-    string suit = hand[0].suit;
-    for (size_t i = 1; i < hand.size(); i++) {
-        if (hand[i].suit != suit) return false;
-    }
-    return true;
-}
 //check if all cards share the same suit 
 bool isFlush(const vector<Card>& hand) {
     string suit = hand[0].suit; //get suit
