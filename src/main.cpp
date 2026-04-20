@@ -243,7 +243,7 @@ int main() {
     //intialize enemy but do not show hand
     Computer opponent; 
     //give enemy 5 cards 
-    for (int i = 0; i < 5; i++) {
+    for(int i=0; i<5; i++) {
         opponent.addCard(deck.draw());
     }//end of for loop
 
