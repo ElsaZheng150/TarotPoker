@@ -85,11 +85,11 @@ void sortHand(vector<int>& hand){
 
 //check if all cards share the same suit 
 bool isFlush(const vector<Card>& hand) {
-    string suit = hand[0].suit; //get suit
-
     if(hand.empty()){
         return false; //safe guard against empty hand
     }//end of if
+
+    string suit = hand[0].suit; //get suit
 
     for (size_t i = 1; i < hand.size(); i++) {
         if (hand[i].suit != suit) {
@@ -101,16 +101,17 @@ bool isFlush(const vector<Card>& hand) {
 
 //check if hand forms a straight
 bool isStraight(vector<int> values) {
-    if(values.empty()){
-        return false; //safe guard against empty hand
+    if(values.empty() || values.size()<5){
+        return false; //safe guard against empty hand or any hand less than 5
     }//end of if
 
     sort(values.begin(), values.end()); //sort in ascending order
 
     for (size_t i = 1; i < values.size(); i++) { //ensure values are incrementing by only 1 value
         //not the next value or dupe will break
-        if ((values[i] != values[i - 1] + 1) || values[i] == values[i - 1]) {
+        if (values[i] != values[i - 1] + 1) {
             return false; //leave if not
+            break;
         }//end of if statement
     }//end of for loop
     return true;
@@ -241,6 +242,10 @@ int main() {
 
     //intialize enemy but do not show hand
     Computer opponent; 
+    //give enemy 5 cards 
+    for (int i = 0; i < 5; i++) {
+        opponent.addCard(deck.draw());
+    }//end of for loop
 
     drawUI(player, deck, selected, message);
 
@@ -324,7 +329,13 @@ int main() {
                 compareHands(player, opponent); 
                 //returns all to deck
                 player.returnAllToDeck(deck);
+                opponent.returnAllToDeck(deck);
                 deck.shuffle();
+
+                for(int i = 0; i < 5; i++) { //redeal to opponent
+                    opponent.addCard(deck.draw());
+                }//end of for loop
+
                 selected = 0;
                 message = "All cards returned to deck and shuffled.";
                 drawUI(player, deck, selected, message);
