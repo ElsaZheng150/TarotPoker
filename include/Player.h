@@ -10,6 +10,7 @@ class Player {
 private:
     vector<Card> hand;
     vector<Card> discardPile;   
+	int chips = 0;
 
 public:
     void addCard(Card card);
@@ -20,6 +21,8 @@ public:
     void returnAllToDeck(Deck& deck);
     int handSize() const;
     bool hasCards() const;
+	int changeChips(int amount);
+	int getChips() const;
     vector<Card>& getHand();
     vector<Card>& getDiscardPile();
 };

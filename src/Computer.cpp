@@ -48,6 +48,15 @@ bool Computer::hasCards() const {
     return !hand.empty();
 }
 
+int Computer::changeChips(int amount) {
+    chips += amount;
+    return chips;
+}
+
+int Computer::getChips() const {
+    return chips;
+}
+
 vector<Card>& Computer::getHand() {
     return hand;
 }
