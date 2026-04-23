@@ -67,7 +67,7 @@ void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     }
 }
 
-void drawGame(InputParams inP) {
+void drawGame(const InputParams& inP) {
     clearScreen();
     cout << "=== Tarot Poker - In Game ===" << endl;
     cout << endl;
@@ -91,9 +91,15 @@ void drawGame(InputParams inP) {
             if (i == inP.selected) {
                 // ANSI inverse colors for highlighting
                 cout << " \033[7m " << inP.opponent.getHand()[i].display() << " \033[0m ";
+				// 'hide' code: Replaces the oppenet's hand with ?? to hide the suit and value from the player (highlighted)
+				// For testing purposes, the opponent's hand will be shown but the code is here to make the switch
+                // cout << " \033[7m \xe2\x81\x87  \033[0m ";
+                
             }
             else {
                 cout << "  " << inP.opponent.getHand()[i].display() << "  ";
+				// Replaces the oppenet's hand with ?? to hide the suit and value from the player
+				//cout << " \xe2\x81\x87  ";
             }
         }
         cout << endl;
@@ -355,7 +361,7 @@ int main() {
     while (running) {
         int key = readKey();
 
-        
+		//main menu for testing deck and hand functionality (preview)
         if (state == 0) {
             if (showingDeck) {
                 showingDeck = false;
@@ -450,6 +456,10 @@ int main() {
                 }
                 case KEY_S: {
                     state = 1;
+                    //empty player hand before starting new game
+                    if (player.handSize() > 0) {
+                        player.returnAllToDeck(deck);
+                    }
 					drawGame(inP);
                     break;
                 }
@@ -460,6 +470,8 @@ int main() {
             }
 
         }
+
+        //started 5 card game w/ opponent (CPU)
 		if (state == 1) {
             if (showingDeck) {
                 showingDeck = false;
@@ -508,8 +520,12 @@ int main() {
 						drawGame(inP);
 						break;
                     }
-                    if (deck.isEmpty()) {
+					if (deck.isEmpty()) { //check if deck is empty before drawing
                         message3 = "The deck is empty!";
+                    }
+                    //comment out if testing requires more than 5 cards
+					if (player.handSize() >= 5) { //check if hand is full before drawing
+                        message3 = "Hand is full. Discard a card before drawing.";
                     }
                     else {
                         Card drawn = deck.draw();
@@ -534,6 +550,10 @@ int main() {
                         player.discardCard(selected);
                         if (selected >= player.handSize() && selected > 0)
                             selected--;
+                        //TODO: add a counter to keep track of how many cards the player has discarded (or use an existing var/func)
+                        //TODO: update draw() or KEY_1 case to not allow the player to draw more than discarded
+                        //TODO: limit the amount of times a player can exchange to once per round (currently they can keep discarding and drawing)
+
                     }
                     drawGame(inP);
                     break;
@@ -582,7 +602,7 @@ int main() {
                         opponent.returnAllToDeck(deck);
                         deck.shuffle();
                         selected = 0;
-                        message2 = "All cards returned to deck and shuffled.";
+                        message2 = "All cards returned to deck and shuffled.\nPress SPACE to enter the shop.";
 						readyForNextGameState = true;
                     }
                     drawGame(inP);
@@ -595,7 +615,7 @@ int main() {
 			}
 
             if (gameState == 0 && alreadyBet == false) {
-                //initial bet phase
+                //initial bet (automatic ante)
                 readyForNextGameState = true;
                 pot += ante * 2;
                 message = "Ante " + to_string(ante) + ": Initial bet of " + to_string(ante) + "\n";
@@ -648,6 +668,7 @@ int main() {
                 //draw/discard phase
 				readyForNextGameState = true;
                 message = "Draw or discard cards!";
+				//TODO: make opponent's draw/discard smarter (currently random num of cards discarded/drawn)
                 if (opponentTurnOver == false) {
                     int cards = rand() % 4;
                     for (int i = 0; i < cards; i++) {
@@ -669,6 +690,7 @@ int main() {
 
             if (gameState == 4) {
                 //2nd betting phase
+                //TODO: make opponent's betting smarter
 				readyForNextGameState = true;
                 message = "Make a bet!";
                 if (opponentTurnOver == false) {
@@ -688,6 +710,8 @@ int main() {
 
             if (gameState == 5) {
                 //showdown phase
+				//TODO: reveal opponent's hand during showdown (currently hidden by ?? if the 'hide' code is not commented out)
+				//TODO: show the player's and opponent's hand rank (straight, flush, etc) during showdown
                 readyForShop = true;
                 if (readyForNextGameState == false) {
                     message = "Press [R] to end the round and see who wins!";
@@ -699,15 +723,25 @@ int main() {
 
         }
 
+        //shop for tarot cards - lets the player manipulate their hand or oppnent's hand in a unique way
         else if (state == 2) {
-            // DOES NOT PROPERLY LOOP BACK TO THE BEGINNING OF THE ROUND
+            //TODO: add actual shop functionality (if time permits)
             switch (key) {
-                case KEY_SPACE: {
+                case KEY_SPACE: { //will be used to exit the shop and start the next round
                     state = 1;
-                    gameState = 0;
-                    alreadyBet = false;
-                    alreadyDrew = false;
-                    opponentTurnOver = false;
+                    gameState = 0; //reset game state to 0 (for new round)
+					readyForShop = false; //reset shop state
+
+                    alreadyBet = false; //reset bet state
+                    alreadyDrew = false; //reset draw state
+					opponentTurnOver = false; //reset opponent turn state
+                    readyForNextGameState = true; //ready for next state in new round
+
+                    //rest the message for the next round
+					message = "Starting a new round! Adding to the ante...";
+					message2 = "";
+					message3 = "";
+
                     drawGame(inP);
                     break;
                 }
