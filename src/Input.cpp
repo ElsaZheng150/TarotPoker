@@ -37,16 +37,26 @@ int readKey() { //read in input
     //basic keys
     if (c == '\r') return KEY_ENTER;
     if (c == 27) return KEY_ESCAPE;
+	if (c == 32) return KEY_SPACE;
 
     //number keys
     if (c == '1') return KEY_1;
     if (c == '2') return KEY_2;
     if (c == '3') return KEY_3;
     if (c == '4') return KEY_4;
+	if (c == '5') return KEY_5;
+	if (c == '6') return KEY_6;
+	if (c == '7') return KEY_7;
+	if (c == '8') return KEY_8;
+	if (c == '9') return KEY_9;
+	if (c == '0') return KEY_0;
     //letter keys with both cases
+    if (c == 'b' || c == 'B') return KEY_B;
     if (c == 'd' || c == 'D') return KEY_D;
+    if (c == 'f' || c == 'F') return KEY_F;
     if (c == 'r' || c == 'R') return KEY_R;
     if (c == 'q' || c == 'Q') return KEY_Q;
+    if (c == 's' || c == 'S') return KEY_S;
 
     if (c == 0 || c == 224) {
         int ext = _getch();
@@ -60,6 +70,7 @@ int readKey() { //read in input
     int c = getch();
 
     if (c == '\n') return KEY_ENTER;
+    if (c == 32) return KEY_SPACE;
 
     if (c == 27) { //ESC or arrow keys
         int c1 = getch();
@@ -79,9 +90,18 @@ int readKey() { //read in input
     if (c == '2') return KEY_2;
     if (c == '3') return KEY_3;
     if (c == '4') return KEY_4;
+    if (c == '5') return KEY_5;
+    if (c == '6') return KEY_6;
+    if (c == '7') return KEY_7;
+    if (c == '8') return KEY_8;
+    if (c == '9') return KEY_9;
+    if (c == '0') return KEY_0;
+    if (c == 'b' || c == 'B') return KEY_B;
     if (c == 'd' || c == 'D') return KEY_D;
+    if (c == 'f' || c == 'F') return KEY_F;
     if (c == 'r' || c == 'R') return KEY_R;
     if (c == 'q' || c == 'Q') return KEY_Q;
+    if (c == 's' || c == 'S') return KEY_S;
 
 #endif
 
