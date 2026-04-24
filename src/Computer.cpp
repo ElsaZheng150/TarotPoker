@@ -64,3 +64,12 @@ vector<Card>& Computer::getHand() {
 vector<Card>& Computer::getDiscardPile() {
     return discardPile;
 }
+
+int Computer::getTokens() const {
+    return tokens;
+}
+
+int Computer::changeTokens(int amount) {
+    tokens += amount;
+    return tokens;
+}

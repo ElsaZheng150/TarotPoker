@@ -8,7 +8,7 @@
 #include <chrono>
 #include <thread>
 #ifdef _WIN32
-#include <windows.h> //Win32 Sleep — std::this_thread::sleep_for can hang under mingw win32 threading
+#include <windows.h> //Win32 Sleep — std::this_thread::sleep_for hangs under mingw win32 threads
 #else
 #include <unistd.h>
 #endif
@@ -18,7 +18,6 @@
 #include "Input.h"
 using namespace std;
 
-//portable small sleep used for dealing/betting animations
 void sleepMs(int ms) {
 #ifdef _WIN32
     Sleep(ms);
@@ -27,7 +26,7 @@ void sleepMs(int ms) {
 #endif
 }
 
-// struct to pass all parameters into drawGame so it isn't cluttered
+//bundled params for drawGame
 struct InputParams {
     Player& player;
     Deck& deck;
@@ -37,12 +36,11 @@ struct InputParams {
 	string& message3;
     Computer& opponent;
     int& pot;
-    int& gameState; //used so drawGame can hide opponent hand until showdown
-    int& discardsThisRound; //so the draw-phase hint can show progress
+    int& gameState; //drawGame reveals the opponent hand only at showdown
+    int& discardsThisRound;
     int& drawsThisRound;
 };
 
-//short label for each gameState value (shown in the phase hint)
 static string phaseName(int gameState) {
     switch (gameState) {
         case 0: return "Ante";
@@ -55,7 +53,6 @@ static string phaseName(int gameState) {
     }
 }
 
-//phase-appropriate action hint shown at the bottom of the game screen
 static string phaseHint(int gameState, int discardsThisRound, int drawsThisRound, int pot) {
     switch (gameState) {
         case 0: return "Press [SPACE] to deal cards.";
@@ -72,14 +69,13 @@ static string phaseHint(int gameState, int discardsThisRound, int drawsThisRound
             return base;
         }
         case 5:
-            //pot is zeroed when R awards it, so use that as the "showdown resolved" signal
+            //pot is zeroed by the R handler, so use it as the "showdown resolved" signal
             if (pot == 0) return "Hand revealed. Press [SPACE] to enter the shop.";
             return "Press [R] to reveal hands and award the pot.";
         default: return "";
     }
 }
 
-// main menu: in-game controls are shown during play, so keep this screen minimal
 void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     clearScreen();
     cout << "=== Tarot Poker ===" << endl;
@@ -102,13 +98,14 @@ void drawGame(const InputParams& inP) {
     cout << "          [B] bet +1 chip  [R] end round (showdown)  [Q] quit" << endl;
     cout << endl;
 
-    cout << "Opponent chips: " << inP.opponent.getChips() << endl << endl;
+    cout << "Opponent chips: " << inP.opponent.getChips()
+         << "   Opponent tokens: " << inP.opponent.getTokens() << endl << endl;
 
     if (inP.opponent.handSize() == 0) {
         cout << "Opponent hand is empty." << endl;
     }
     else {
-        //reveal opponent's hand only at showdown (gameState 5); never show the player's cursor on opponent cards
+        //reveal only at showdown; no cursor highlight on opponent cards
         bool reveal = (inP.gameState == 5);
         cout << "Opponent hand: \n\n";
         for (int i = 0; i < inP.opponent.handSize(); i++) {
@@ -124,7 +121,8 @@ void drawGame(const InputParams& inP) {
     cout << endl;
 	cout << "-----------------------------------------" << endl << endl;
 
-    cout << "Your chips: " << inP.player.getChips() << endl << endl;
+    cout << "Your chips: " << inP.player.getChips()
+         << "   Your tokens: " << inP.player.getTokens() << endl << endl;
 
     if (inP.player.handSize() == 0) {
         cout << "Your hand is empty." << endl;
@@ -133,7 +131,7 @@ void drawGame(const InputParams& inP) {
         cout << "Your hand: \n\n";
         for (int i = 0; i < inP.player.handSize(); i++) {
             if (i == inP.selected) {
-                // ANSI inverse colors for highlighting
+                //ANSI inverse highlight
                 cout << " \033[7m " << inP.player.getHand()[i].display() << " \033[0m ";
             }
             else {
@@ -151,7 +149,6 @@ void drawGame(const InputParams& inP) {
     cout << inP.message2 << endl;
 	cout << inP.message3 << endl;
 
-    //phase label + action hint so the player always knows what to press next
     cout << endl;
     cout << "--- Phase " << inP.gameState << ": " << phaseName(inP.gameState) << " ---" << endl;
     cout << phaseHint(inP.gameState, inP.discardsThisRound, inP.drawsThisRound, inP.pot) << endl;
@@ -161,16 +158,23 @@ void drawShop(InputParams inP) {
     clearScreen();
     cout << "=== Tarot Poker - Shop ===" << endl;
     cout << endl;
-    cout << "Controls: [SPACE] exit shop and start next round  [D] view deck  [Q] quit" << endl;
+    cout << "Controls: [1] buy Item 1 (test)  [SPACE] exit shop  [D] view deck  [Q] quit" << endl;
+    cout << endl;
+    cout << "Your chips: " << inP.player.getChips()
+         << "   Your tokens: " << inP.player.getTokens() << endl;
     cout << endl;
     cout << "|---| Item 1 |---|     |---| Item 2 |---|     |---| Item 3 |---|" << endl;
-    cout << endl << endl << endl << endl << endl << endl << endl << endl;
+    cout << "| 5 tokens      |     |   (coming soon) |     |   (coming soon) |" << endl;
+    cout << "| test purchase |" << endl;
+    cout << endl << endl << endl << endl << endl << endl;
     cout << endl;
     cout << "Press [SPACE] to return to the game and up the ante." << endl;
+    if (!inP.message3.empty()) {
+        cout << endl << "> " << inP.message3 << endl;
+    }
 }
 
-//display the player or computer that won using results from compareHands
-//win (0), lose (1), draw(2)
+//0 = player wins, 1 = enemy wins, 2 = tie
 void displayWinner(int whoWon, string& message){
     if(whoWon == 0){
 		message = "Player Wins\n";
@@ -183,134 +187,78 @@ void displayWinner(int whoWon, string& message){
     }
 }
 
-/*
-Keep in case do different method later but decided to go with easier code
-//sort hand by ascending order using bubble sort
-//pass by reference to modify vector
-void sortHand(vector<int>& hand){
-    for(size_t i=0; i<hand.size()-1; i++){
-        for(size_t j=0; j<hand.size()-i-1; j++){
-            //swap if in wrong order
-            if(hand[j] > hand[j+1]){
-                int temp = hand[j+1];
-                hand[j+1] = hand[j];
-                hand[j] = temp;
-            }
-        }
-    }
-}
-*/
-
-//check if all cards share the same suit — only meaningful for a full 5-card hand
+//flush check — only meaningful with a full 5-card hand
 bool isFlush(const vector<Card>& hand) {
     if (hand.size() < 5) {
-        return false; //flush requires a full 5-card hand
+        return false;
     }
-
-    string suit = hand[0].suit; //get suit
-
+    string suit = hand[0].suit;
     for (size_t i = 1; i < hand.size(); i++) {
         if (hand[i].suit != suit) {
-            return false; //not a flush
+            return false;
         }
     }
     return true;
 }
 
-//check if hand forms a straight — only meaningful for a full 5-card hand
+//straight check — only meaningful with a full 5-card hand
 bool isStraight(vector<int> values) {
     if (values.size() < 5) {
-        return false; //straight requires 5 consecutive cards
+        return false;
     }
-
-    sort(values.begin(), values.end()); //sort in ascending order
-
-    for (size_t i = 1; i < values.size(); i++) { //ensure values are incrementing by only 1 value
-        //not the next value or dupe will break
+    sort(values.begin(), values.end());
+    for (size_t i = 1; i < values.size(); i++) {
         if ((values[i] != values[i - 1] + 1) || values[i] == values[i - 1]) {
-            return false; //leave if not
+            return false;
         }
     }
     return true;
 }
 
-//determine how good the player/opponent's hand is
-//Straight Flush > 4 of a kind > Full House > Flush >
-//Straight > 3 of a kind > 2 pair > pair > high card
+//rank: 8=straight flush, 7=four of a kind, 6=full house, 5=flush,
+//4=straight, 3=three of a kind, 2=two pair, 1=pair, 0=high card
 int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
-    vector<int> cardValues; //numeric card values
-    vector<string> suits; //the suit of the cards (for flush hands)
-
-    //determine the numeric value of each card (how good it is)
+    vector<int> cardValues;
     for(size_t i=0; i<hand.size(); i++) {
         cardValues.push_back(hand[i].numericValue);
-        suits.push_back(hand[i].suit);
     }
 
-    //sort the values in descending value using built in function from algorithm
-    sort(cardValues.begin(), cardValues.end(), greater<int>());
-    sortedValues = cardValues; //put sorted values into sortedValues vector
-
-    //count the frequencies to determine hand type
-    map<int, int> freq; //map to pair value to frequency
+    map<int, int> freq;
     for(size_t j=0; j<cardValues.size(); j++) {
-        freq[cardValues[j]]++; //increment count for value at j from hand
+        freq[cardValues[j]]++;
     }
 
-    bool flush = isFlush(hand); //check if it's a flush using helper
-    bool straight = isStraight(cardValues); //check if it's a straight using helper
- 
-    int four = 0; //check for four of a kind
-    int three = 0; //check for three of a kind
-    int pairs = 0; //check for pairs
+    //sort by (frequency desc, value desc) so pair/trip/quad values lead sortedValues.
+    //without this tiebreak, a K-pair loses to a Q-pair whose kicker is an Ace.
+    sort(cardValues.begin(), cardValues.end(), [&freq](int a, int b) {
+        if (freq[a] != freq[b]) return freq[a] > freq[b];
+        return a > b;
+    });
+    sortedValues = cardValues;
 
-    //find frequencies to determine hand type
-    for(auto k=freq.begin(); k!=freq.end(); k++) { //auto determine type
-        if(k->second == 4){
-            four = 1; //four of kind
-        }
-        else if(k->second == 3){
-            three = 1; //three of a kind
-        }
-        else if(k->second == 2){
-            pairs++; //pairs exist
-        }
-        else{
-            continue; //keep looking/high card maybe
-        }
+    bool flush = isFlush(hand);
+    bool straight = isStraight(cardValues);
+
+    int four = 0;
+    int three = 0;
+    int pairs = 0;
+    for(auto k=freq.begin(); k!=freq.end(); k++) {
+        if(k->second == 4) four = 1;
+        else if(k->second == 3) three = 1;
+        else if(k->second == 2) pairs++;
     }
 
-    //determine ranking based off of poker rules
-    if(straight && flush){
-        return 8; //straight flush
-    }
-    else if(four > 0){
-        return 7; //four of a kind
-    }
-    else if(three>0 && pairs==1){
-        return 6; //full house
-    }
-    else if(flush){
-        return 5; //flush
-    }
-    else if(straight){
-        return 4; //straight
-    }
-    else if(three > 0){
-        return 3; //three of a kind but not full house
-    }
-    else if(pairs == 2){
-        return 2; //2 pair
-    }
-    else if(pairs == 1){
-        return 1; //pair
-    }
-    else{
-        return 0; //high card
-    }
+    if(straight && flush) return 8;
+    if(four > 0) return 7;
+    if(three > 0 && pairs == 1) return 6;
+    if(flush) return 5;
+    if(straight) return 4;
+    if(three > 0) return 3;
+    if(pairs == 2) return 2;
+    if(pairs == 1) return 1;
+    return 0;
 }
 
-//human-readable hand rank name (matches the 0-8 scale in getHandRank)
 string handRankName(int rank) {
     switch (rank) {
         case 8: return "Straight Flush";
@@ -326,9 +274,7 @@ string handRankName(int rank) {
     }
 }
 
-//computer AI: pick indices to discard this round.
-//keeps cards that are part of a pair/better, chases 4-of-suit flushes,
-//keeps high singletons (J+), dumps low singletons. caps at 3 per traditional 5-card draw.
+//AI discard: keeps pairs+, chases 4-of-suit flushes, keeps J+ singletons, caps at 3
 vector<int> computerDecideDiscards(const vector<Card>& hand) {
     vector<int> discards;
     map<int, int> valueFreq;
@@ -338,7 +284,7 @@ vector<int> computerDecideDiscards(const vector<Card>& hand) {
         suitFreq[hand[i].suit]++;
     }
 
-    //chasing a flush? keep all cards of the dominant suit, ditch the odd one out
+    //4-of-a-suit -> chase the flush by dumping the odd card
     string flushSuit = "";
     for (auto it = suitFreq.begin(); it != suitFreq.end(); it++) {
         if (it->second >= 4) {
@@ -352,8 +298,8 @@ vector<int> computerDecideDiscards(const vector<Card>& hand) {
             if (hand[i].suit != flushSuit) discards.push_back(i);
             continue;
         }
-        if (valueFreq[hand[i].numericValue] >= 2) continue; //part of pair+
-        if (hand[i].numericValue >= 11) continue; //high singleton
+        if (valueFreq[hand[i].numericValue] >= 2) continue; //pair+
+        if (hand[i].numericValue >= 11) continue;           //high singleton
         discards.push_back(i);
     }
 
@@ -361,24 +307,22 @@ vector<int> computerDecideDiscards(const vector<Card>& hand) {
     return discards;
 }
 
-//computer AI: size a bet based on hand strength. never returns > opponent's chips.
+//AI bet sizing by hand strength, clamped to available chips
 int computerDecideBet(const vector<Card>& hand, int ante, int availableChips) {
     vector<int> sorted;
     int rank = getHandRank(hand, sorted);
     int bet;
-    if (rank >= 6) bet = 1 + ante * 3;          //full house or better: aggressive
-    else if (rank >= 4) bet = 1 + ante * 2;     //straight/flush: strong
-    else if (rank >= 2) bet = 1 + ante;         //two pair/trips: solid
-    else if (rank >= 1) bet = 1;                //pair: cautious
-    else bet = (rand() % 2);                    //high card: 0 or 1 (sometimes bluff)
+    if (rank >= 6) bet = 1 + ante * 3;          //full house+
+    else if (rank >= 4) bet = 1 + ante * 2;     //straight/flush
+    else if (rank >= 2) bet = 1 + ante;         //two pair/trips
+    else if (rank >= 1) bet = 1;                //pair
+    else bet = (rand() % 2);                    //high card: occasional bluff
     if (bet > availableChips) bet = availableChips;
     if (bet < 0) bet = 0;
     return bet;
 }
 
-//see which player (player vs computer) has the better hand.
-//returns the winner code (0=player, 1=computer, 2=tie) and builds a message
-//containing both hands' rank names plus the winner announcement.
+//returns 0=player wins, 1=enemy wins, 2=tie. fills `message` with both hand names + result
 int compareHands(Player& human, Computer& enemy, string& message) {
     vector<Card> player = human.getHand();
     vector<Card> opponent = enemy.getHand();
@@ -386,17 +330,16 @@ int compareHands(Player& human, Computer& enemy, string& message) {
     vector<int> enemyValues;
     int playerHandRank = getHandRank(player, playerValues);
     int enemyHandRank = getHandRank(opponent, enemyValues);
-    int isWinner = 2; //default tie
+    int isWinner = 2;
 
-    // compare rank first
     if(playerHandRank > enemyHandRank){
-        isWinner = 0; //player wins
+        isWinner = 0;
     }
     else if(playerHandRank < enemyHandRank){
-        isWinner = 1; //enemy wins
+        isWinner = 1;
     }
     else{
-        //high card to break ties
+        //same rank: walk sortedValues (already freq-then-value ordered) for the tiebreak
         for (int i = 0; i < (int)playerValues.size(); i++){
             if (playerValues[i] > enemyValues[i]){
                 isWinner = 0;
@@ -409,7 +352,6 @@ int compareHands(Player& human, Computer& enemy, string& message) {
         }
     }
 
-    //build message with hand ranks, then append winner announcement
     string winMsg;
     displayWinner(isWinner, winMsg);
     message = "Your hand: " + handRankName(playerHandRank) + "\n"
@@ -418,37 +360,41 @@ int compareHands(Player& human, Computer& enemy, string& message) {
     return isWinner;
 }
 
+//base 10 + 5 per hand rank
+int tokenPayoutForRank(int rank) {
+    return 10 + 5 * rank;
+}
+
 int main() {
-    //set console to utf-8 for suit symbols
-    system("chcp 65001 > nul"); //removed because windows os only
+    //UTF-8 console for suit symbols (Windows only)
+    system("chcp 65001 > nul");
     srand((unsigned int)time(0));
 
     Deck deck;
     deck.shuffle();
-    Player player; 
+    Player player;
 
     int selected = 0;
     string message = "Welcome to Tarot Poker!";
-    string message2 = ""; // extra message if needed
-	string message3 = ""; // used for messages like "You can't bet right now" & "You can't draw right now"
+    string message2 = "";
+	string message3 = ""; //transient error hint ("You can't X right now")
     bool running = true;
     bool showingDeck = false;
 
-    int state = 0; //0 for draw/discard functionality, 1 for the actual game, 2 for shop
-	int gameState = 0; //0 for initial bet, 1 for dealing, 2 for 1st bet, 3 for draw discard, 4 for 2nd bet, 5 for showdown
+    int state = 0;      //0=menu, 1=game, 2=shop
+	int gameState = 0;  //0=ante, 1=deal, 2=bet1, 3=draw/discard, 4=bet2, 5=showdown
     int chips = 100;
-	int betChips = 0; // tracks how many chips the player has bet in the current betting round
-    int pot = 0; // total chips bet by all players
-	int ante = 1; // initial bet amount
+	int betChips = 0;   //chips bet this round
+    int pot = 0;
+	int ante = 1;
     int alreadyBet = false;
     int alreadyDrew = false;
     int opponentTurnOver = false;
 	bool readyForNextGameState = false;
 	bool readyForShop = false;
-	int discardsThisRound = 0; //5-card draw exchange counters (reset each round)
+	int discardsThisRound = 0; //exchange counters, reset each round
 	int drawsThisRound = 0;
 
-    //intialize enemy but do not show hand
     Computer opponent;
 
 	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot, gameState, discardsThisRound, drawsThisRound};
@@ -461,16 +407,15 @@ int main() {
     while (running) {
         int key = readKey();
 
-        //main menu: only S (start) and Q (quit) are live here now
+        //main menu: only S (start) and Q (quit)
         if (state == 0) {
             switch (key) {
                 case KEY_S: {
                     state = 1;
-                    //empty player hand before starting new game
                     if (player.handSize() > 0) {
                         player.returnAllToDeck(deck);
                     }
-                    //reset UI state so the menu's cursor/messages don't bleed into the game screen
+                    //reset cursor/messages so menu state doesn't leak into the game screen
                     selected = 0;
                     message = "";
                     message2 = "";
@@ -486,7 +431,7 @@ int main() {
 
         }
 
-        //started 5 card game w/ opponent (CPU)
+        //active round
 		if (state == 1) {
             if (showingDeck) {
                 showingDeck = false;
@@ -514,7 +459,7 @@ int main() {
                         drawGame(inP);
                         break;
                     }
-                    //can't leave the draw phase with an incomplete exchange (partial hand)
+                    //can't leave the draw phase with a partial hand
                     if (gameState == 3 && drawsThisRound < discardsThisRound) {
                         int owed = discardsThisRound - drawsThisRound;
                         message3 = "Draw " + to_string(owed)
@@ -529,8 +474,7 @@ int main() {
 						betChips = 0;
 					}
                     if (readyForShop) {
-                        //return the revealed hands to the deck before entering the shop
-                        //so the deck-view shows the full 52 cards
+                        //return hands to the deck entering the shop so deck-view shows all 52
                         player.returnAllToDeck(deck);
                         opponent.returnAllToDeck(deck);
                         deck.shuffle();
@@ -549,14 +493,14 @@ int main() {
 						drawGame(inP);
 						break;
                     }
-                    //exchange limits: you can only draw as many cards as you've discarded
+                    //draws <= discards (exchange cap)
                     if (drawsThisRound >= discardsThisRound) {
                         message3 = "You can only draw as many cards as you've discarded.";
                     }
-                    else if (deck.isEmpty()) { //check if deck is empty before drawing
+                    else if (deck.isEmpty()) {
                         message3 = "The deck is empty!";
                     }
-                    else if (player.handSize() >= 5) { //check if hand is full before drawing
+                    else if (player.handSize() >= 5) {
                         message3 = "Hand is full. Discard a card before drawing.";
                     }
                     else {
@@ -575,7 +519,7 @@ int main() {
                         drawGame(inP);
                         break;
                     }
-                    //exchange limits: max 3 discards per round, no discarding after drawing starts
+                    //max 3 discards per round; no discards after drawing starts
                     if (drawsThisRound > 0) {
                         message3 = "You've already started drawing — no more discards this round.";
                     }
@@ -593,9 +537,6 @@ int main() {
                             selected--;
                     }
                     drawGame(inP);
-                    break;
-                }
-                case KEY_3: {
                     break;
                 }
                 case KEY_B: {
@@ -617,7 +558,6 @@ int main() {
                     break;
                 }
                 case KEY_D: {
-                    //deck view is shop-only now
                     message3 = "Deck viewing is only available in the shop.";
                     drawGame(inP);
                     break;
@@ -627,30 +567,43 @@ int main() {
                         drawGame(inP);
                         break;
                     }
-                    //player hands competes against the enemy
                     if (player.handSize() == 0 || opponent.handSize() == 0) {
                         message3 = "Both players needs cards in hand.";
                     }
                     else {
+                        //both ranks used for token payout
+                        vector<int> pv; vector<int> ov;
+                        int playerRank = getHandRank(player.getHand(), pv);
+                        int opponentRank = getHandRank(opponent.getHand(), ov);
+
                         int winner = compareHands(player, opponent, message);
-                        //award the pot to the winner (split on tie, odd chip to player)
+                        //winner takes pot; tie splits with odd chip going to the player
                         if (winner == 0) {
                             player.changeChips(pot);
-                            message += "You win " + to_string(pot) + " chips!\n";
+                            int payout = tokenPayoutForRank(playerRank);
+                            player.changeTokens(payout);
+                            message += "You win " + to_string(pot) + " chips and "
+                                    + to_string(payout) + " tokens!\n";
                         } else if (winner == 1) {
                             opponent.changeChips(pot);
-                            message += "Opponent wins " + to_string(pot) + " chips.\n";
+                            int payout = tokenPayoutForRank(opponentRank);
+                            opponent.changeTokens(payout);
+                            message += "Opponent wins " + to_string(pot) + " chips and "
+                                    + to_string(payout) + " tokens.\n";
                         } else {
                             int half = pot / 2;
                             int odd = pot - 2 * half;
                             player.changeChips(half + odd);
                             opponent.changeChips(half);
+                            int payout = tokenPayoutForRank(playerRank);
+                            player.changeTokens(payout);
+                            opponent.changeTokens(payout);
                             message += "Pot split: " + to_string(half + odd) + " to you, "
-                                    + to_string(half) + " to opponent.\n";
+                                    + to_string(half) + " to opponent. Both earn "
+                                    + to_string(payout) + " tokens.\n";
                         }
                         pot = 0;
-                        //hands are NOT returned to deck here so the reveal stays on screen;
-                        //the shop-exit handler returns and reshuffles them for the next round
+                        //leave hands on screen after R; the shop-exit handler clears them
                         message2 = "Press [SPACE] to enter the shop.";
                         readyForNextGameState = true;
                     }
@@ -663,8 +616,8 @@ int main() {
                 }
 			}
 
+            //ante
             if (gameState == 0 && alreadyBet == false) {
-                //initial bet (automatic ante) — actually deduct from both players
                 readyForNextGameState = true;
                 int playerAnte = ante;
                 int oppAnte = ante;
@@ -678,10 +631,10 @@ int main() {
                 drawGame(inP);
                 alreadyBet = true;
             }
-            
 
+
+            //deal 5 cards to each silently
             if (gameState == 1 && alreadyDrew == false) {
-                //dealing phase — deal all five cards to each player silently
                 readyForNextGameState = true;
                 for (int i = 0; i < 5; i++) {
                     player.addCard(deck.draw());
@@ -693,18 +646,17 @@ int main() {
                 alreadyDrew = true;
             }
 
+            //1st betting round
             if (gameState == 2) {
-                //1st betting phase
 				readyForNextGameState = true;
                 message = "Make a bet!";
                 if (opponentTurnOver == false) {
-                    //opponent sizes its bet based on hand strength (smart AI)
                     int bet = computerDecideBet(opponent.getHand(), ante, opponent.getChips());
                     for (int i = 0; i < bet; i++) {
                         opponent.changeChips(-1);
                         pot++;
                         drawGame(inP);
-                        sleepMs(500); //disable if this breaks things
+                        sleepMs(500);
                     }
                     message2 = "Opponent bet " + to_string(bet) + " chips.\n";
                     opponentTurnOver = true;
@@ -712,25 +664,24 @@ int main() {
 				drawGame(inP);
 			}
 
+            //draw/discard
             if (gameState == 3) {
-                //draw/discard phase
 				readyForNextGameState = true;
                 message = "Draw or discard cards!";
                 if (opponentTurnOver == false) {
-                    //opponent uses heuristic discard (keep pairs, chase flushes, keep high singletons)
                     vector<int> toDiscard = computerDecideDiscards(opponent.getHand());
-                    //sort descending so earlier indices stay valid while erasing
+                    //erase highest indices first so the remaining ones stay valid
                     sort(toDiscard.begin(), toDiscard.end(), greater<int>());
                     for (size_t i = 0; i < toDiscard.size(); i++) {
                         opponent.discardCard(toDiscard[i]);
                         drawGame(inP);
-                        sleepMs(500); //disable if this breaks things
+                        sleepMs(500);
                     }
                     for (size_t i = 0; i < toDiscard.size(); i++) {
                         if (deck.isEmpty()) break;
                         opponent.addCard(deck.draw());
                         drawGame(inP);
-                        sleepMs(500); //disable if this breaks things
+                        sleepMs(500);
                     }
                     message2 = "Opponent drew and discarded " + to_string(toDiscard.size()) + " cards.\n";
                     opponentTurnOver = true;
@@ -738,18 +689,17 @@ int main() {
 				drawGame(inP);
             }
 
+            //2nd betting round
             if (gameState == 4) {
-                //2nd betting phase
 				readyForNextGameState = true;
                 message = "Make a bet!";
                 if (opponentTurnOver == false) {
-                    //same smart bet sizing as 1st betting phase
                     int bet = computerDecideBet(opponent.getHand(), ante, opponent.getChips());
                     for (int i = 0; i < bet; i++) {
                         opponent.changeChips(-1);
                         pot++;
                         drawGame(inP);
-                        sleepMs(500); //disable if this breaks things
+                        sleepMs(500);
                     }
                     message2 = "Opponent bet " + to_string(bet) + " chips.\n";
                     opponentTurnOver = true;
@@ -758,45 +708,41 @@ int main() {
 				drawGame(inP);
             }
 
+            //showdown
             if (gameState == 5) {
-                //showdown phase
-				//TODO: reveal opponent's hand during showdown (currently hidden by ?? if the 'hide' code is not commented out)
-				//TODO: show the player's and opponent's hand rank (straight, flush, etc) during showdown
                 readyForShop = true;
                 if (readyForNextGameState == false) {
                     message = "Press [R] to end the round and see who wins!";
                 }
-				
+
 				drawGame(inP);
             }
 
 
         }
 
-        //shop for tarot cards - lets the player manipulate their hand or oppnent's hand in a unique way
+        //shop (tarot purchasing; not wired up yet)
         else if (state == 2) {
-            //returning from the deck view: clear the flag and redraw the shop
             if (showingDeck) {
                 showingDeck = false;
                 drawShop(inP);
                 continue;
             }
-            //TODO: add actual shop functionality (if time permits)
+            //TODO: real shop inventory
             switch (key) {
-                case KEY_SPACE: { //will be used to exit the shop and start the next round
-                    //hands were already returned to the deck when entering the shop
+                case KEY_SPACE: { //exit shop, start next round
+                    //hands were already returned to the deck on shop entry
                     state = 1;
-                    gameState = 0; //reset game state to 0 (for new round)
-					readyForShop = false; //reset shop state
+                    gameState = 0;
+					readyForShop = false;
 
-                    alreadyBet = false; //reset bet state
-                    alreadyDrew = false; //reset draw state
-					opponentTurnOver = false; //reset opponent turn state
-                    readyForNextGameState = true; //ready for next state in new round
-                    discardsThisRound = 0; //reset exchange counters for new round
+                    alreadyBet = false;
+                    alreadyDrew = false;
+					opponentTurnOver = false;
+                    readyForNextGameState = true;
+                    discardsThisRound = 0;
                     drawsThisRound = 0;
 
-                    //rest the message for the next round
 					message = "Starting a new round! Adding to the ante...";
 					message2 = "";
 					message3 = "";
@@ -805,12 +751,24 @@ int main() {
                     break;
                 }
                 case KEY_D: {
-                    //deck view moved here from the in-game loop
                     showingDeck = true;
                     clearScreen();
                     deck.display();
                     cout << endl << "Press any key to return to the shop..." << endl;
                     continue;
+                }
+                case KEY_1: {
+                    //no-op purchase just to exercise the token flow
+                    const int cost = 5;
+                    if (player.getTokens() < cost) {
+                        message3 = "Not enough tokens (need " + to_string(cost)
+                                 + ", have " + to_string(player.getTokens()) + ").";
+                    } else {
+                        player.changeTokens(-cost);
+                        message3 = "Bought Item 1 for " + to_string(cost) + " tokens.";
+                    }
+                    drawShop(inP);
+                    break;
                 }
                 case KEY_Q: {
                     running = false;

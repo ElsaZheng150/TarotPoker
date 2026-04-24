@@ -65,3 +65,12 @@ vector<Card>& Player::getHand() {
 vector<Card>& Player::getDiscardPile() {
     return discardPile;
 }
+
+int Player::getTokens() const {
+    return tokens;
+}
+
+int Player::changeTokens(int amount) {
+    tokens += amount;
+    return tokens;
+}

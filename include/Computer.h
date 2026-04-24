@@ -9,11 +9,12 @@ using namespace std;
 class Computer {
 private:
     vector<Card> hand;
-    vector<Card> discardPile;   
+    vector<Card> discardPile;
     int chips = 0;
+    int tokens = 0; //mirrors Player: secondary currency awarded on win
 
 public:
-    void addCard(Card card);    
+    void addCard(Card card);
     void discardCard(int index);
     void changeCardValue(int index, const string& newValue, int newNumeric);
     void changeCardSuit(int index, const string& newSuit);
@@ -25,6 +26,10 @@ public:
 	int getChips() const;
     vector<Card>& getHand();
     vector<Card>& getDiscardPile();
+
+    //tokens
+    int getTokens() const;
+    int changeTokens(int amount);
 };
 
 #endif

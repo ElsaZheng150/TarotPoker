@@ -9,8 +9,9 @@ using namespace std;
 class Player {
 private:
     vector<Card> hand;
-    vector<Card> discardPile;   
+    vector<Card> discardPile;
 	int chips = 0;
+    int tokens = 0; //secondary currency, awarded to the winner at showdown
 
 public:
     void addCard(Card card);
@@ -25,6 +26,10 @@ public:
 	int getChips() const;
     vector<Card>& getHand();
     vector<Card>& getDiscardPile();
+
+    //tokens (secondary currency)
+    int getTokens() const;
+    int changeTokens(int amount);
 };
 
 #endif
