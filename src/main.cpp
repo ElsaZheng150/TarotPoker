@@ -195,30 +195,39 @@ int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
 
 //see which player (player vs computer) has the better hand
 void compareHands(Player& human, Computer& enemy) {
-    vector<Card> player = human.getHand();
-    vector<Card> opponent = enemy.getHand();
-    vector<int> playerValues;
-    vector<int> enemyValues;
-    int playerHandRank = getHandRank(player, playerValues);
+    vector<Card> player = human.getHand(); //get player hand
+    vector<Card> opponent = enemy.getHand(); //get computer opponent hand
+    vector<int> playerValues; //numeric values of player's hand
+    vector<int> enemyValues; //numeric values of enemy's hand
+    //determine how good each hand is
+    int playerHandRank = getHandRank(player, playerValues); 
     int enemyHandRank = getHandRank(opponent, enemyValues);
-    int isWinner = 2; //default tie
+    int isWinner = 2; //default tie (no added or lost currency)
 
     // compare rank first
     if(playerHandRank > enemyHandRank){
         isWinner = 0; //player wins
+        //add bet amount onto total currency
+        human.setCurrency(human.getCurrency() + human.getBetAmount()); 
     }//end of if
     else if(playerHandRank < enemyHandRank){
         isWinner = 1; //enemy wins
+        //take out bet amount during loss
+        human.setCurrency(human.getCurrency() - human.getBetAmount()); 
     }//end of else if
     else{
         //high card to break ties
         for (int i = 0; i < (int)playerValues.size(); i++){
             if (playerValues[i] > enemyValues[i]){
-                isWinner = 0;
+                isWinner = 0; //player wins
+                //add bet amount onto total currency
+                human.setCurrency(human.getCurrency() + human.getBetAmount()); 
                 break;
             }//end of if
             if (playerValues[i] < enemyValues[i]){
-                isWinner = 1;
+                isWinner = 1; //enemy wins
+                //take out bet amount during loss
+                human.setCurrency(human.getCurrency() - human.getBetAmount());
                 break;
             }//end of if
         }//end of for loop
@@ -325,12 +334,32 @@ int main() {
                 break;
             }
             case KEY_R: {
+                //have player bet before revealing results
+                cout << "How much would you like to bet? If you do not place a valid bet, then you will be default bet all your money." << endl;
+                int numBetMoney;
+                cin >> numBetMoney; //take in user input
+                //valid bet is greater than 0 and less than or equal to all currency (can't go over)
+                //default all in if no valid bet is placed
+                if(numBetMoney>0 && numBetMoney<=player.getCurrency()){
+                    player.setBetAmount(numBetMoney); //set amount if valid
+                } //end of if
+                else{
+                    player.setBetAmount(player.getCurrency()); //all in
+                }//end of else
+
                 //player hands competes against the enemy
                 compareHands(player, opponent); 
                 //returns all to deck
                 player.returnAllToDeck(deck);
                 opponent.returnAllToDeck(deck);
                 deck.shuffle();
+
+                //if broke, then game ends
+                if(player.getCurrency() <= 0){
+                    cout << "You are out of funds. You will now be kicked out of the casino." << endl;
+                    running = false;
+                    break;
+                }//end of if
 
                 for(int i = 0; i < 5; i++) { //redeal to opponent
                     opponent.addCard(deck.draw());
