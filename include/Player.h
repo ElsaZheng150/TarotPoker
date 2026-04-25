@@ -9,7 +9,9 @@ using namespace std;
 class Player {
 private:
     vector<Card> hand;
-    vector<Card> discardPile;   
+    vector<Card> discardPile;  
+    int currency = 100; //amount of chips a player has to bet 
+    int betAmount; //default all in
 
 public:
     void addCard(Card card);
@@ -20,6 +22,10 @@ public:
     void returnAllToDeck(Deck& deck);
     int handSize() const;
     bool hasCards() const;
+    void setBetAmount(int amount);
+    int getBetAmount();
+    int getCurrency();
+    void setCurrency(int money);
     vector<Card>& getHand();
     vector<Card>& getDiscardPile();
 };
