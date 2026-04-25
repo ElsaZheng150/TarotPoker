@@ -80,7 +80,7 @@ void drawGame(const InputParams& inP) {
 	cout << "[Q]      Quit" << endl << endl;
 
 
-    cout << "Opponent chips: " << inP.opponent.getChips() << endl << endl;
+    cout << "Opponent chips: " << inP.opponent.getCurrency() << endl << endl;
 
     if (inP.opponent.handSize() == 0) {
         cout << "Opponent hand is empty." << endl;
@@ -108,7 +108,7 @@ void drawGame(const InputParams& inP) {
     cout << endl;
 	cout << "-----------------------------------------" << endl << endl;
 
-    cout << "Your chips: " << inP.player.getChips() << endl << endl;
+    cout << "Your chips: " << inP.player.getCurrency() << endl << endl;
 
     if (inP.player.handSize() == 0) {
         cout << "Your hand is empty." << endl;
@@ -289,7 +289,7 @@ int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
 }//end of getHandRank
 
 //see which player (player vs computer) has the better hand
-void compareHands(Player& human, Computer& enemy) {
+void compareHands(Player& human, Computer& enemy, string& message) {
     vector<Card> player = human.getHand(); //get player hand
     vector<Card> opponent = enemy.getHand(); //get computer opponent hand
     vector<int> playerValues; //numeric values of player's hand
@@ -369,8 +369,8 @@ int main() {
 
     drawUI(player, deck, selected, message);
 
-    player.changeChips(100);
-	opponent.changeChips(100);
+    player.setCurrency(100);
+	opponent.setCurrency(100);
 
     while (running) {
         int key = readKey();
@@ -583,7 +583,7 @@ int main() {
                     }
                     pot++;
 					betChips++;
-                    player.changeChips(-1);
+                    player.setCurrency(-1);
                     if (betChips == 1) {
                         message2 = "Added 1 chip to the pot.\n";
                     }
@@ -710,7 +710,7 @@ int main() {
                 if (opponentTurnOver == false) {
                     int bet = 1 + rand() % ante;
                     for (int i = 0; i < bet; i++) {
-                        opponent.changeChips(-1);
+                        opponent.setCurrency(-1);
                         pot++;
                         drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
@@ -753,7 +753,7 @@ int main() {
                 if (opponentTurnOver == false) {
                     int bet = 1 + rand() % ante;
                     for (int i = 0; i < bet; i++) {
-                        opponent.changeChips(-1);
+                        opponent.setCurrency(-1);
                         pot++;
                         drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
