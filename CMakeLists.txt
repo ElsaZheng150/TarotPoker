@@ -11,4 +11,5 @@ add_executable(TarotPoker
     src/Deck.cpp
     src/Player.cpp
     src/Input.cpp
+    src/Computer.cpp
 )

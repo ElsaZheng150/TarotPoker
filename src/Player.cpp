@@ -49,6 +49,15 @@ bool Player::hasCards() const {
     return !hand.empty();
 }
 
+int Player::changeChips(int amount) {
+    chips += amount;
+    return chips;
+}
+
+int Player::getChips() const {
+    return chips;
+}
+
 vector<Card>& Player::getHand() {
     return hand;
 }
@@ -57,6 +66,14 @@ vector<Card>& Player::getDiscardPile() {
     return discardPile;
 }
 
+int Player::getTokens() const {
+    return tokens;
+}
+
+int Player::changeTokens(int amount) {
+    tokens += amount;
+    return tokens;
+}
 int Player::getCurrency(){
     return currency;
 }//end of getCurrency
