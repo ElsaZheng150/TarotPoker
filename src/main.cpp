@@ -248,105 +248,40 @@ int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
         else if(k->second == 2) pairs++;
     }
 
-    if(straight && flush) return 8;
-    if(four > 0) return 7;
-    if(three > 0 && pairs == 1) return 6;
-    if(flush) return 5;
-    if(straight) return 4;
-    if(three > 0) return 3;
-    if(pairs == 2) return 2;
-    if(pairs == 1) return 1;
-    return 0;
-}
-
-string handRankName(int rank) {
-    switch (rank) {
-        case 8: return "Straight Flush";
-        case 7: return "Four of a Kind";
-        case 6: return "Full House";
-        case 5: return "Flush";
-        case 4: return "Straight";
-        case 3: return "Three of a Kind";
-        case 2: return "Two Pair";
-        case 1: return "Pair";
-        case 0: return "High Card";
-        default: return "Unknown";
-    }
-}
-
-//AI discard: keeps pairs+, chases 4-of-suit flushes, keeps J+ singletons, caps at 3
-vector<int> computerDecideDiscards(const vector<Card>& hand) {
-    vector<int> discards;
-    map<int, int> valueFreq;
-    map<string, int> suitFreq;
-    for (size_t i = 0; i < hand.size(); i++) {
-        valueFreq[hand[i].numericValue]++;
-        suitFreq[hand[i].suit]++;
-    }
-
-    //4-of-a-suit -> chase the flush by dumping the odd card
-    string flushSuit = "";
-    for (auto it = suitFreq.begin(); it != suitFreq.end(); it++) {
-        if (it->second >= 4) {
-            flushSuit = it->first;
-            break;
-        }
-    }
-
-    for (int i = 0; i < (int)hand.size(); i++) {
-        if (!flushSuit.empty()) {
-            if (hand[i].suit != flushSuit) discards.push_back(i);
-            continue;
-        }
-        if (valueFreq[hand[i].numericValue] >= 2) continue; //pair+
-        if (hand[i].numericValue >= 11) continue;           //high singleton
-        discards.push_back(i);
-    }
-
-    if (discards.size() > 3) discards.resize(3);
-    return discards;
-}
-
-//AI bet sizing by hand strength, clamped to available chips
-int computerDecideBet(const vector<Card>& hand, int ante, int availableChips) {
-    vector<int> sorted;
-    int rank = getHandRank(hand, sorted);
-    int bet;
-    if (rank >= 6) bet = 1 + ante * 3;          //full house+
-    else if (rank >= 4) bet = 1 + ante * 2;     //straight/flush
-    else if (rank >= 2) bet = 1 + ante;         //two pair/trips
-    else if (rank >= 1) bet = 1;                //pair
-    else bet = (rand() % 2);                    //high card: occasional bluff
-    if (bet > availableChips) bet = availableChips;
-    if (bet < 0) bet = 0;
-    return bet;
-}
-
-//returns 0=player wins, 1=enemy wins, 2=tie. fills `message` with both hand names + result
-int compareHands(Player& human, Computer& enemy, string& message) {
-    vector<Card> player = human.getHand();
-    vector<Card> opponent = enemy.getHand();
-    vector<int> playerValues;
-    vector<int> enemyValues;
-    int playerHandRank = getHandRank(player, playerValues);
+//see which player (player vs computer) has the better hand
+void compareHands(Player& human, Computer& enemy) {
+    vector<Card> player = human.getHand(); //get player hand
+    vector<Card> opponent = enemy.getHand(); //get computer opponent hand
+    vector<int> playerValues; //numeric values of player's hand
+    vector<int> enemyValues; //numeric values of enemy's hand
+    //determine how good each hand is
+    int playerHandRank = getHandRank(player, playerValues); 
     int enemyHandRank = getHandRank(opponent, enemyValues);
-    int isWinner = 2;
+    int isWinner = 2; //default tie (no added or lost currency)
 
     if(playerHandRank > enemyHandRank){
-        isWinner = 0;
-    }
+        isWinner = 0; //player wins
+        //add bet amount onto total currency
+        human.setCurrency(human.getCurrency() + human.getBetAmount()); 
+    }//end of if
     else if(playerHandRank < enemyHandRank){
-        isWinner = 1;
-    }
+        isWinner = 1; //enemy wins
+        //take out bet amount during loss
+        human.setCurrency(human.getCurrency() - human.getBetAmount()); 
+    }//end of else if
     else{
         //same rank: walk sortedValues (already freq-then-value ordered) for the tiebreak
         for (int i = 0; i < (int)playerValues.size(); i++){
             if (playerValues[i] > enemyValues[i]){
-                isWinner = 0;
+                isWinner = 0; //player wins
+                //add bet amount onto total currency
+                human.setCurrency(human.getCurrency() + human.getBetAmount()); 
                 break;
             }
             if (playerValues[i] < enemyValues[i]){
-                isWinner = 1;
+                isWinner = 1; //enemy wins
+                //take out bet amount during loss
+                human.setCurrency(human.getCurrency() - human.getBetAmount());
                 break;
             }
         }

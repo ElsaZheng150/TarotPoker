@@ -74,3 +74,18 @@ int Player::changeTokens(int amount) {
     tokens += amount;
     return tokens;
 }
+int Player::getCurrency(){
+    return currency;
+}//end of getCurrency
+
+void Player::setCurrency(int money){
+    currency = money;
+}//end of setCurrency
+
+int Player::getBetAmount(){
+    return betAmount;
+}//end of getBetAmount
+
+void Player::setBetAmount(int amount){
+    betAmount = amount;
+}//end of setBetAmount
