@@ -23,13 +23,28 @@ Different types of bots such as one which goes for a particular hand type
 Some would be more defensive (using tarot cards for their own benefit)
 Or offensive (using tarot cards to change opponent’s cards to sabotage)
 
-For decks we would still need to figure out whether or not it gets reset every round so player changes don’t affect the next round or if all cards keep their changed states and get re-shuffled in the deck. 
-If we were to not reset the cards in the deck eventually the suits and values will be skewed which would make certain hands such as flushes or 5 of a kind more easy to achieve therefore making those hands overvalued. 
-We could either not do this or for each round calculate the probability of each hand being drawn and then rank them again based upon rarity. 
-(we could keep their rankings hidden from the players so they don’t end up having a cycle where they switch their cards between two different types of hands
-This would also add another aspect as to not create too many of the same card as it would also help your opponents win not just yourself.
+Classes:
+1. Card: how each card in the deck looks with its info (type, suit, numeric/strength value)
+2. Deck: what cards are available in a standard poker deck with option to expand with tarot cards
+3. Player: variables and functions for the player (hand, cards, currency)
+5. Computer: a child of Player, differs by functions for basic game AI
+6. Input: for reading in user input using keys
+7. Main: where the main game code resides, contains code to compare hands and to run the game by outputing text on the console (game and shop)
+
 External Libraries
 string library: to use string variables for console output
 iostream library: for standard input and output
 vector library: use vectors to keep track of cards in the deck and what the players have
 cstdlib: for random number generation
+
+How to compile and run the program:
+1. Clone the repository on Github
+2. Open on VS Code
+3. Install a C++ compiler if needed
+4. Set up any configurations needed
+5. Run the game using VS Code
+
+How to play the game:
+1. Ensure the previous set of instructions regarding compiling has been met
+2. Hit run
+3. Follow the console instructions and have fun!
