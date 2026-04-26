@@ -9,7 +9,7 @@ using namespace std;
 
 class Computer : public Player{
 private:  
-    //will share same attributes as player
+    //child of the player class as it is an AI player
 public:
 
 };
