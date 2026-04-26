@@ -29,121 +29,121 @@ struct InputParams {
 // redraws the entire UI after every action so it isn't as cluttered
 void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     clearScreen();
-    cout << "=== Tarot Poker - Deck System ===" << endl;
-    cout << endl;
+    std::cout << "=== Tarot Poker - Deck System ===" << endl;
+    std::cout << endl;
 
     if (player.handSize() == 0) {
-        cout << "Your hand is empty." << endl;
+        std::cout << "Your hand is empty." << endl;
     } else {
-        cout << "Your hand: ";
+        std::cout << "Your hand: ";
         for (int i = 0; i < player.handSize(); i++) {
             if (i == selected) {
                 // ANSI inverse colors for highlighting
-                cout << " \033[7m " << player.getHand()[i].display() << " \033[0m ";
+                std::cout << " \033[7m " << player.getHand()[i].display() << " \033[0m ";
             } else {
-                cout << "  " << player.getHand()[i].display() << "  ";
+                std::cout << "  " << player.getHand()[i].display() << "  ";
             }
         }
-        cout << endl;
+        std::cout << endl;
     }
 
-    cout << endl;
-    cout << "Deck: " << deck.size() << "/" << deck.getTotal() << " cards" << endl;
-    cout << endl;
+    std::cout << endl;
+    std::cout << "Deck: " << deck.size() << "/" << deck.getTotal() << " cards" << endl;
+    std::cout << endl;
 
-    cout << "--- Controls ---" << endl;
-    cout << "[<] [>]  Navigate hand" << endl;
-    cout << "[1]      Draw a card" << endl;
-    cout << "[2]      Discard selected card" << endl;
-    cout << "[3]      Increase selected card value" << endl;
-    cout << "[4]      Cycle selected card suit" << endl;
-    cout << "[D]      View deck" << endl;
-    cout << "[R]      End round (return cards)" << endl; //will check who wins (player v computer)
-	cout << "[S]      Start game" << endl;
-    cout << "[Q]      Quit" << endl;
+    std::cout << "--- Controls ---" << endl;
+    std::cout << "[<] [>]  Navigate hand" << endl;
+    std::cout << "[1]      Draw a card" << endl;
+    std::cout << "[2]      Discard selected card" << endl;
+    std::cout << "[3]      Increase selected card value" << endl;
+    std::cout << "[4]      Cycle selected card suit" << endl;
+    std::cout << "[D]      View deck" << endl;
+    std::cout << "[R]      End round (return cards)" << endl; //will check who wins (player v computer)
+	std::cout << "[S]      Start game" << endl;
+    std::cout << "[Q]      Quit" << endl;
 
     if (!message.empty()) {
-        cout << endl << "> " << message << endl;
+        std::cout << endl << "> " << message << endl;
     }
 }
 
 void drawGame(const InputParams& inP) {
     clearScreen();
-    cout << "=== Tarot Poker - In Game ===" << endl;
-    cout << endl;
-    cout << "[<] [>]  Navigate hand" << endl;
-	cout << "[SPACE]  Progress game state" << endl;
-    cout << "[1]      Draw a card" << endl;
-    cout << "[2]      Discard selected card" << endl;
-	cout << "[B]      Bet +1 chip" << endl;
-	cout << "[D]      View deck" << endl;
-	cout << "[Q]      Quit" << endl << endl;
+    std::cout << "=== Tarot Poker - In Game ===" << endl;
+    std::cout << endl;
+    std::cout << "[<] [>]  Navigate hand" << endl;
+	std::cout << "[SPACE]  Progress game state" << endl;
+    std::cout << "[1]      Draw a card" << endl;
+    std::cout << "[2]      Discard selected card" << endl;
+	std::cout << "[B]      Bet +1 chip" << endl;
+	std::cout << "[D]      View deck" << endl;
+	std::cout << "[Q]      Quit" << endl << endl;
 
 
-    cout << "Opponent chips: " << inP.opponent.getCurrency() << endl << endl;
+    std::cout << "Opponent chips: " << inP.opponent.getCurrency() << endl << endl;
 
     if (inP.opponent.handSize() == 0) {
-        cout << "Opponent hand is empty." << endl;
+        std::cout << "Opponent hand is empty." << endl;
     }
     else {
-        cout << "Opponent hand: \n\n";
+        std::cout << "Opponent hand: \n\n";
         for (int i = 0; i < inP.opponent.handSize(); i++) {
             if (i == inP.selected) {
                 // ANSI inverse colors for highlighting
-                cout << " \033[7m " << inP.opponent.getHand()[i].display() << " \033[0m ";
+                std::cout << " \033[7m " << inP.opponent.getHand()[i].display() << " \033[0m ";
 				// 'hide' code: Replaces the oppenet's hand with ?? to hide the suit and value from the player (highlighted)
 				// For testing purposes, the opponent's hand will be shown but the code is here to make the switch
-                // cout << " \033[7m \xe2\x81\x87  \033[0m ";
+                // std::cout << " \033[7m \xe2\x81\x87  \033[0m ";
                 
             }
             else {
-                cout << "  " << inP.opponent.getHand()[i].display() << "  ";
+                std::cout << "  " << inP.opponent.getHand()[i].display() << "  ";
 				// Replaces the oppenet's hand with ?? to hide the suit and value from the player
-				//cout << " \xe2\x81\x87  ";
+				//std::cout << " \xe2\x81\x87  ";
             }
         }
-        cout << endl;
+        std::cout << endl;
     }
 
-    cout << endl;
-	cout << "-----------------------------------------" << endl << endl;
+    std::cout << endl;
+	std::cout << "-----------------------------------------" << endl << endl;
 
-    cout << "Your chips: " << inP.player.getCurrency() << endl << endl;
+    std::cout << "Your chips: " << inP.player.getCurrency() << endl << endl;
 
     if (inP.player.handSize() == 0) {
-        cout << "Your hand is empty." << endl;
+        std::cout << "Your hand is empty." << endl;
     }
     else {
-        cout << "Your hand: \n\n";
+        std::cout << "Your hand: \n\n";
         for (int i = 0; i < inP.player.handSize(); i++) {
             if (i == inP.selected) {
                 // ANSI inverse colors for highlighting
-                cout << " \033[7m " << inP.player.getHand()[i].display() << " \033[0m ";
+                std::cout << " \033[7m " << inP.player.getHand()[i].display() << " \033[0m ";
             }
             else {
-                cout << "  " << inP.player.getHand()[i].display() << "  ";
+                std::cout << "  " << inP.player.getHand()[i].display() << "  ";
             }
         }
-        cout << endl;
+        std::cout << endl;
     }
 
-    cout << endl;
-    cout << "=========================================" << endl << endl;
-    cout << "Total pot: " << inP.pot << endl << endl;
+    std::cout << endl;
+    std::cout << "=========================================" << endl << endl;
+    std::cout << "Total pot: " << inP.pot << endl << endl;
 
-    cout << inP.message << endl;
-    cout << inP.message2 << endl;
-	cout << inP.message3 << endl;
+    std::cout << inP.message << endl;
+    std::cout << inP.message2 << endl;
+	std::cout << inP.message3 << endl;
 }
 
 void drawShop(InputParams inP) {
     clearScreen();
-    cout << "=== Tarot Poker - Shop ===" << endl;
-    cout << endl;
-    cout << "|---| Item 1 |---|     |---| Item 2 |---|     |---| Item 3 |---|" << endl;
-    cout << endl << endl << endl << endl << endl << endl << endl << endl << endl << endl;
-    cout << endl;
-    cout << "Press [SPACE] to return to the game and up the ante." << endl;
+    std::cout << "=== Tarot Poker - Shop ===" << endl;
+    std::cout << endl;
+    std::cout << "|---| Item 1 |---|     |---| Item 2 |---|     |---| Item 3 |---|" << endl;
+    std::cout << endl << endl << endl << endl << endl << endl << endl << endl << endl << endl;
+    std::cout << endl;
+    std::cout << "Press [SPACE] to return to the game and up the ante." << endl;
 }
 
 //display the player or computer that won using results from compareHands
@@ -159,6 +159,38 @@ void displayWinner(int whoWon, string& message){
 		message = "Draw\n";
     }
 }//end of displayWinner
+
+//handle the playerBet
+void handlePlayerBet(Player& player, int&pot, string& message, int ALL = 777){
+
+    std::cout << "Place CUSTOM BET or ALL IN [777]: ";
+    int numBetMoney;
+    if (!(cin >> numBetMoney)) {//take in user input
+        cin.clear();
+        cin.ignore(1000, '\n'); //clear input buffer if invalid input
+        numBetMoney = 0; //default to 0 if invalid input
+    }
+    else {
+        //valid bet is greater than 0 and less than or equal to all currency (can't go over)
+        //default all in if no valid bet is placed
+        if (numBetMoney > 0 && numBetMoney <= player.getCurrency()) {
+            player.setBetAmount(numBetMoney); //set amount if valid
+            player.setCurrency(player.getCurrency() - numBetMoney); //subtract from player's currency
+            pot += player.getBetAmount(); //add to pot
+        } //end of if
+        else if (numBetMoney == ALL) {
+            player.setBetAmount(player.getCurrency()); //set all in if 777 is entered
+            player.setCurrency(0); //subtract all from player's currency
+            pot += player.getBetAmount(); //add all in to pot
+        }
+        else {
+            //invalid bet, default 0
+            player.setBetAmount(0);
+            message = "No chips added to the pot.";
+        }
+	}//end of else
+
+}//end of handlePlayerBet
 
 /*
 Keep in case do different method later but decided to go with easier code
@@ -359,16 +391,13 @@ int main() {
 	bool readyForShop = false;
 
     //intialize enemy but do not show hand
-    Computer opponent; 
-    //give enemy 5 cards 
-    for(int i=0; i<5; i++) {
-        opponent.addCard(deck.draw());
-    }//end of for loop
+    Computer opponent;
 
 	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot};
 
     drawUI(player, deck, selected, message);
 
+    //set player and opponent currency count for initial sitdown
     player.setCurrency(100);
 	opponent.setCurrency(100);
 
@@ -376,7 +405,7 @@ int main() {
         int key = readKey();
 
 		//main menu for testing deck and hand functionality (preview)
-        if (state == 0) {
+        if (running && state == 0) {
             if (showingDeck) {
                 showingDeck = false;
                 drawUI(player, deck, selected, message);
@@ -449,7 +478,7 @@ int main() {
                     showingDeck = true;
                     clearScreen();
                     deck.display();
-                    cout << endl << "Press any key to return..." << endl;
+                    std::cout << endl << "Press any key to return..." << endl;
                     break;
                 }
                 case KEY_R: {
@@ -486,7 +515,7 @@ int main() {
         }
 
         //started 5 card game w/ opponent (CPU)
-		if (state == 1) {
+		if (running && state == 1) {
             if (showingDeck) {
                 showingDeck = false;
                 drawGame(inP);
@@ -508,6 +537,11 @@ int main() {
                     break;
                 }
                 case KEY_SPACE: {
+                    if(gameState == 0 && !alreadyBet){ //ante is automatic, so we dont need to use SPACE to advance to ante
+                        //allow player to read initial message about ante before progressing
+                        drawGame(inP);
+                        break;
+					}
 					if (readyForNextGameState == false) {
                         message3 = "You can't progress the game state right now.";
                         drawGame(inP);
@@ -575,29 +609,11 @@ int main() {
                 case KEY_3: {
                     break;
                 }
-                case KEY_B: {
-                    if (!(gameState == 2 || gameState == 4)) {
-						message3 = "You can't bet right now!";
-						drawGame(inP);
-                        break;
-                    }
-                    pot++;
-					betChips++;
-                    player.setCurrency(-1);
-                    if (betChips == 1) {
-                        message2 = "Added 1 chip to the pot.\n";
-                    }
-                    else if (betChips > 1) {
-                        message2 = "Added " + to_string(betChips) + " chips to the pot.\n";
-                    }
-                    drawGame(inP);
-                    break;
-                }
                 case KEY_D: {
                     showingDeck = true;
                     clearScreen();
                     deck.display();
-                    cout << endl << "Press any key to return..." << endl;
+                    std::cout << endl << "Press any key to return..." << endl;
                     continue;
                 }
                 case KEY_R: {
@@ -621,49 +637,6 @@ int main() {
                     }
                     drawGame(inP);
                     break;
-                    /*
-                    case KEY_R: {
-                //have player bet before revealing results
-                cout << "How much would you like to bet? If you do not place a valid bet, then you will be default bet all your money." << endl;
-                int numBetMoney;
-                cin >> numBetMoney; //take in user input
-                //valid bet is greater than 0 and less than or equal to all currency (can't go over)
-                //default all in if no valid bet is placed
-                if(numBetMoney>0 && numBetMoney<=player.getCurrency()){
-                    player.setBetAmount(numBetMoney); //set amount if valid
-                } //end of if
-                else{
-                    player.setBetAmount(player.getCurrency()); //all in
-                }//end of else
-
-                //player hands competes against the enemy
-                compareHands(player, opponent); 
-                //returns all to deck
-                player.returnAllToDeck(deck);
-                opponent.returnAllToDeck(deck);
-                deck.shuffle();
-
-                //if broke, then game ends
-                if(player.getCurrency() <= 0){
-                    cout << "You are out of funds. You will now be kicked out of the casino." << endl;
-                    running = false;
-                    break;
-                }//end of if
-
-                for(int i = 0; i < 5; i++) { //redeal to opponent
-                    opponent.addCard(deck.draw());
-                }//end of for loop
-
-                selected = 0;
-                message = "All cards returned to deck and shuffled.";
-                drawUI(player, deck, selected, message);
-                break;
-            }
-            case KEY_Q: {
-                running = false;
-                break;
-            }
-                    */
                 }
                 case KEY_Q: {
                     running = false;
@@ -673,6 +646,21 @@ int main() {
 
             if (gameState == 0 && alreadyBet == false) {
                 //initial bet (automatic ante)
+                message3 = ""; //reset message 3 (error)
+                if (player.getCurrency() <= 0) { //check if player has sufficient funds to continue before ante
+                    message = "You are out of funds. Get out. NOW!";
+                    drawGame(inP);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(3000)); //pause to let player read message
+                    running = false;
+                    break;
+                }
+				if (opponent.getCurrency() <= 0) { //check if opponent has sufficient funds to continue before ante
+                    message = "Opponent is out of funds. You win! Get out while you're ahead!";
+                    drawGame(inP);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); //pause to let player read message
+                    running = false;
+                    break;
+                }
                 readyForNextGameState = true;
                 pot += ante * 2;
                 message = "Ante " + to_string(ante) + ": Initial bet of " + to_string(ante) + "\n";
@@ -698,6 +686,7 @@ int main() {
                     drawGame(inP);
                     std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
                 }
+				message = "Cards dealt!\n";
                 drawGame(inP);
 				alreadyBet = false;
                 alreadyDrew = true;
@@ -705,25 +694,38 @@ int main() {
 
             if (gameState == 2) {
                 //1st betting phase
-				readyForNextGameState = true;
-                message = "Make a bet!";
+                //opponent goes first
+                readyForNextGameState = true;
+                message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
                     int bet = 1 + rand() % ante;
                     for (int i = 0; i < bet; i++) {
-                        opponent.setCurrency(-1);
+                        opponent.setCurrency(opponent.getCurrency() - bet);
                         pot++;
                         drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
                     }
-                    message2 = "Opponent bet " + to_string(bet) + " chips.\n";
+                    message = "Opponent bet " + to_string(bet) + " chips.";
                     opponentTurnOver = true;
+                    drawGame(inP);
                 }
+
+				//player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
+                message2 = "Your turn to bet!";
 				drawGame(inP);
+                if (alreadyBet == false) {
+                    handlePlayerBet(player, pot, message);
+                    alreadyBet = true;
+                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed.";
+                    drawGame(inP);
+                }
 			}
 
             if (gameState == 3) {
                 //draw/discard phase
 				readyForNextGameState = true;
+				alreadyBet = false; //reset bet state for next betting round
+                message2 = "";
                 message = "Draw or discard cards!";
 				//TODO: make opponent's draw/discard smarter (currently random num of cards discarded/drawn)
                 if (opponentTurnOver == false) {
@@ -747,28 +749,39 @@ int main() {
 
             if (gameState == 4) {
                 //2nd betting phase
+				//Opponent goes first
                 //TODO: make opponent's betting smarter
-				readyForNextGameState = true;
-                message = "Make a bet!";
+                readyForNextGameState = true;
+                message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
                     int bet = 1 + rand() % ante;
                     for (int i = 0; i < bet; i++) {
-                        opponent.setCurrency(-1);
+                        opponent.setCurrency(opponent.getCurrency() - bet);
                         pot++;
                         drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
                     }
-                    message2 = "Opponent bet " + to_string(bet) + " chips.\n";
+                    message = "Opponent bet " + to_string(bet) + " chips.";
                     opponentTurnOver = true;
+                    drawGame(inP);
                 }
 
-				drawGame(inP);
+                //player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
+                message2 = "Your turn to bet!";
+                drawGame(inP);
+                if (alreadyBet == false) {
+                    handlePlayerBet(player, pot, message);
+                    alreadyBet = true;
+                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed.";
+                    drawGame(inP);
+                }
             }
 
             if (gameState == 5) {
                 //showdown phase
 				//TODO: reveal opponent's hand during showdown (currently hidden by ?? if the 'hide' code is not commented out)
 				//TODO: show the player's and opponent's hand rank (straight, flush, etc) during showdown
+                message2 = "";
                 readyForShop = true;
                 if (readyForNextGameState == false) {
                     message = "Press [R] to end the round and see who wins!";
@@ -780,7 +793,7 @@ int main() {
 
         }
         //shop for tarot cards - lets the player manipulate their hand or oppnent's hand in a unique way
-        else if (state == 2) {
+        else if (running && state == 2) {
             //TODO: add actual shop functionality (if time permits)
             switch (key) {
                 case KEY_SPACE: { //will be used to exit the shop and start the next round
@@ -791,7 +804,7 @@ int main() {
                     alreadyBet = false; //reset bet state
                     alreadyDrew = false; //reset draw state
 					opponentTurnOver = false; //reset opponent turn state
-                    readyForNextGameState = true; //ready for next state in new round
+                    readyForNextGameState = false; //reset for next state in new round
 
                     //rest the message for the next round
 					message = "Starting a new round! Adding to the ante...";
@@ -829,7 +842,7 @@ int main() {
     }
 
     clearScreen();
-    cout << "Goodbye!" << endl;
+    std::cout << "Goodbye!" << endl;
 
     return 0;
 }

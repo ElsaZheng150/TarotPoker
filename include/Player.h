@@ -10,9 +10,8 @@ class Player {
 private:
     vector<Card> hand;
     vector<Card> discardPile;
-    int tokens = 0; //secondary currency, awarded to the winner at showdown
-    vector<Card> discardPile;  
-    int currency = 100; //amount of chips a player has to bet 
+    int tokens = 0; //secondary currency, awarded to the winner at showdown 
+    int currency = 0; //amount of chips a player has to bet 
     int betAmount; //default all in
 
 public:
