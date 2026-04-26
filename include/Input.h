@@ -4,7 +4,7 @@
 #include <string>
 using namespace std;
 
-//Key codes
+//Key codes for user input
 enum Key {
     KEY_UNKNOWN,
     KEY_ENTER,
@@ -32,7 +32,7 @@ enum Key {
     KEY_S
 };
 
-int readKey();
-void clearScreen();
+int readKey(); //take in user input
+void clearScreen(); //wipe all console text and start the game over
 
 #endif
