@@ -22,21 +22,26 @@ struct InputParams {
 	string& message2;
 	string& message3;
     Computer& opponent;
-    int& pot;
-    
+    int& pot; 
 };
 
-// redraws the entire UI after every action so it isn't as cluttered
+/*
+    Function: drawUI
+    Purpose: redraws the entire UI after every action so it isn't as cluttered
+    Parameters: the player, the deck, things to display
+    Return: None, print to console
+*/
 void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     clearScreen();
     std::cout << "=== Tarot Poker - Deck System ===" << endl;
     std::cout << endl;
 
+    //display what cards the player has if any
     if (player.handSize() == 0) {
         std::cout << "Your hand is empty." << endl;
     } else {
         std::cout << "Your hand: ";
-        for (int i = 0; i < player.handSize(); i++) {
+		for (int i = 0; i < player.handSize(); i++) { //loop through hand and display cards
             if (i == selected) {
                 // ANSI inverse colors for highlighting
                 std::cout << " \033[7m " << player.getHand()[i].display() << " \033[0m ";
@@ -47,6 +52,7 @@ void drawUI(Player& player, Deck& deck, int selected, const string& message) {
         std::cout << endl;
     }
 
+	//menu to let user know what actions they can perform to play the game
     std::cout << endl;
     std::cout << "Deck: " << deck.size() << "/" << deck.getTotal() << " cards" << endl;
     std::cout << endl;
@@ -67,8 +73,15 @@ void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     }
 }
 
+/*
+    Function: drawGame
+    Purpose: Output the game to the player on the console
+    Parameters: inP (the Input Parameters)
+    Return: None, output to console
+*/
 void drawGame(const InputParams& inP) {
-    clearScreen();
+	clearScreen(); //clear any previous text
+	//print menu and instrictions for the game
     std::cout << "=== Tarot Poker - In Game ===" << endl;
     std::cout << endl;
     std::cout << "[<] [>]  Navigate hand" << endl;
@@ -79,8 +92,8 @@ void drawGame(const InputParams& inP) {
 	std::cout << "[D]      View deck" << endl;
 	std::cout << "[Q]      Quit" << endl << endl;
 
-
-    std::cout << "Opponent chips: " << inP.opponent.getCurrency() << endl << endl;
+	//output opponent's status
+    cout << "Opponent chips: " << inP.opponent.getCurrency() << endl << endl;
 
     if (inP.opponent.handSize() == 0) {
         std::cout << "Opponent hand is empty." << endl;
@@ -105,11 +118,13 @@ void drawGame(const InputParams& inP) {
         std::cout << endl;
     }
 
+    //formatting
     std::cout << endl;
 	std::cout << "-----------------------------------------" << endl << endl;
 
     std::cout << "Your chips: " << inP.player.getCurrency() << endl << endl;
 
+    //show player their cards if there are cards
     if (inP.player.handSize() == 0) {
         std::cout << "Your hand is empty." << endl;
     }
@@ -136,6 +151,12 @@ void drawGame(const InputParams& inP) {
 	std::cout << inP.message3 << endl;
 }
 
+/*
+    Function: drawShop
+    Purpose: output the shop for users to buy tarot cards
+    Parameters: standard ones listed at top
+    Return: None, print to console
+*/
 void drawShop(InputParams inP) {
     clearScreen();
     std::cout << "=== Tarot Poker - Shop ===" << endl;
@@ -146,18 +167,24 @@ void drawShop(InputParams inP) {
     std::cout << "Press [SPACE] to return to the game and up the ante." << endl;
 }
 
-//display the player or computer that won using results from compareHands
-//win (0), lose (1), draw(2)
+/*
+    Function: displayWinner
+    win (0), lose (1), draw(2)
+    Purpose: display the player or computer that won using results from compareHands
+    Parameters: number corresponding to player win, tie, player loss, what to show the player
+    Return: None
+*/
 void displayWinner(int whoWon, string& message){
+    //set message based on win number
     if(whoWon == 0){
 		message = "Player Wins\n";
-    }
+    }//end of if
     if(whoWon == 1){
         message = "Player Loses\n";
-    }
+    }//end of if
     if(whoWon == 2){
 		message = "Draw\n";
-    }
+    }//end of if
 }//end of displayWinner
 
 //handle the playerBet
@@ -210,23 +237,36 @@ void sortHand(vector<int>& hand){
 }//end of sortHand
 */
 
-//check if all cards share the same suit 
+/*
+    Function: isFlush
+    Purpose: check if all cards share the same suit (flush)
+    Parameters: the hand (player or enemy's)
+    Return: True if the hand has a flush, False if the hand has differing suits
+*/
 bool isFlush(const vector<Card>& hand) {
-    if(hand.empty()){
+    //do nothing if hnad is empty or does not have 5 cards
+    if(hand.empty() || hand.size()!=5){
         return false; //safe guard against empty hand
     }//end of if
 
     string suit = hand[0].suit; //get suit
 
-    for (size_t i = 1; i < hand.size(); i++) {
-        if (hand[i].suit != suit) {
+    //loop through the hand to check if suit matches 
+    for(size_t i=1; i<hand.size(); i++) {
+        if(hand[i].suit != suit) {
             return false; //not a flush
         }//end of if
     }//end of for loop
-    return true; 
+
+    return true; //default return
 }//end of isFlush
 
-//check if hand forms a straight
+/*
+    Function: isStraight
+    Purpose: check if hand forms a straight (values differ by 1)
+    Parameters: a vector containing the strength values of cards from the hand
+    Return: True if hand contains a straight, False if there is no straight
+*/
 bool isStraight(vector<int> values) {
     if(values.empty() || values.size()<5){
         return false; //safe guard against empty hand or any hand less than 5
@@ -234,7 +274,7 @@ bool isStraight(vector<int> values) {
 
     sort(values.begin(), values.end()); //sort in ascending order
 
-    for (size_t i = 1; i < values.size(); i++) { //ensure values are incrementing by only 1 value
+    for(size_t i=1; i<values.size(); i++) { //ensure values are incrementing by only 1 value
         //not the next value or dupe will break
         if (values[i] != values[i - 1] + 1) {
             return false; //leave if not
@@ -244,9 +284,13 @@ bool isStraight(vector<int> values) {
     return true;
 }//end of isStraight
 
-//determine how good the player/opponent's hand is
-//Straight Flush > 4 of a kind > Full House > Flush >
-//Straight > 3 of a kind > 2 pair > pair > high card
+/*
+    Function: getHandRank
+    Purpose: determine how good the player/opponent's hand is
+    Straight Flush > 4 of a kind > Full House > Flush > Straight > 3 of a kind > 2 pair > pair > high card
+    Parameters: a vector containing the cards in the hand, the sorted strength values of the hand
+    Return: the rank of the hand (how strong it is)
+*/
 int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
     vector<int> cardValues; //numeric card values
     vector<string> suits; //the suit of the cards (for flush hands)
@@ -320,7 +364,12 @@ int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
     }//end of else
 }//end of getHandRank
 
-//see which player (player vs computer) has the better hand
+/*
+    Function: compareHands
+    Purpose: see which player (player vs computer) has the better hand
+    Parameters: the player, the computer (AI enemy), and what message to print
+    Return: 
+*/
 void compareHands(Player& human, Computer& enemy, string& message) {
     vector<Card> player = human.getHand(); //get player hand
     vector<Card> opponent = enemy.getHand(); //get computer opponent hand
@@ -344,6 +393,7 @@ void compareHands(Player& human, Computer& enemy, string& message) {
     }//end of else if
     else{
         //high card to break ties
+        //loop through hands to determine who wins
         for (int i = 0; i < (int)playerValues.size(); i++){
             if (playerValues[i] > enemyValues[i]){
                 isWinner = 0; //player wins
@@ -362,6 +412,12 @@ void compareHands(Player& human, Computer& enemy, string& message) {
     displayWinner(isWinner, message); //display who the winner is
 }//end of compareHands
 
+/*
+    Function: main
+    Purpose: allows users to play the game
+    Parameters: None
+    Return: int 0
+*/
 int main() {
     //set console to utf-8 for suit symbols
     system("chcp 65001 > nul"); //removed because windows os only
@@ -384,25 +440,27 @@ int main() {
 	int betChips = 0; // tracks how many chips the player has bet in the current betting round
     int pot = 0; // total chips bet by all players
 	int ante = 1; // initial bet amount 
-    int alreadyBet = false;
-    int alreadyDrew = false;
-    int opponentTurnOver = false;
-	bool readyForNextGameState = false;
-	bool readyForShop = false;
+    int alreadyBet = false; //check betting status
+    int alreadyDrew = false; //check status of drawing cards
+    int opponentTurnOver = false; //check what computer is doing
+	bool readyForNextGameState = false; //check if game can move on
+	bool readyForShop = false; //check if can use shop
 
     //intialize enemy but do not show hand
     Computer opponent;
 
+    //declare parameters
 	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot};
 
+    //display the game
     drawUI(player, deck, selected, message);
 
-    //set player and opponent currency count for initial sitdown
     player.setCurrency(100);
 	opponent.setCurrency(100);
 
-    while (running) {
-        int key = readKey();
+    //game to continue until we reach a stopping point
+    while (running) { 
+        int key = readKey(); //read in user input
 
 		//main menu for testing deck and hand functionality (preview)
         if (running && state == 0) {
