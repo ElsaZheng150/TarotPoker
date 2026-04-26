@@ -11,9 +11,21 @@
 #include "Player.h"
 #include "Computer.h"
 #include "Input.h"
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 using namespace std;
 
-// struct to pass all parameters into drawGame so it isn't cluttered
+//portable small sleep used for dealing/betting animations
+void sleepMs(int ms){
+    #ifdef _WIN32
+        Sleep(ms);
+    #endif
+}
+
+//bundled params for drawGame
 struct InputParams {
     Player& player;
     Deck& deck;
@@ -23,13 +35,35 @@ struct InputParams {
 	string& message3;
     Computer& opponent;
     int& pot;
-    
+    int& gameState;
+    int& discardsThisRound;
+    int& drawsThisRound;
 };
+
+//short label for each gameState value (shown in the phase hint)
+static string phaseName(int gameState){
+    switch(gameState){
+        case 0: return "Ante";
+    }
+}
+
+//phase-appropriate action hint shown at the bottom of the game screen
+static string phaseHint(int gameState, int discardsThisRound, int drawsThisRound, int pot){
+    switch(gameState){
+        case 0: return "Press [SPACE] to deal cards.";
+        //pot is zeroed by the R handler, so use it as the "showdown resolved" signal
+        case 5: 
+            if(pot == 0) return "Hand revealed. Press [SPACE] to enter the shop.";
+            return "Press [R] to reveal hands and award the pot.";
+        default: return "";
+    }
+}
 
 // redraws the entire UI after every action so it isn't as cluttered
 void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     clearScreen();
-    cout << "=== Tarot Poker - Deck System ===" << endl;
+    cout << "=== Tarot Poker ===" << endl;
+    cout <<  "           [B] bet +1 chip  [R] end round (showdown). [Q] quit" << endl;
     cout << endl;
 
     if (player.handSize() == 0) {
@@ -303,12 +337,12 @@ void compareHands(Player& human, Computer& enemy, string& message) {
     if(playerHandRank > enemyHandRank){
         isWinner = 0; //player wins
         //add bet amount onto total currency
-        human.setCurrency(human.getCurrency() + human.getBetAmount()); 
+        human.setCurrency(human.getCurrency() + human.getBetAmount() + enemy.getBetAmount()); 
     }//end of if
     else if(playerHandRank < enemyHandRank){
         isWinner = 1; //enemy wins
         //take out bet amount during loss
-        human.setCurrency(human.getCurrency() - human.getBetAmount()); 
+        human.setCurrency(human.getCurrency() - human.getBetAmount() - enemy.getBetAmount()); 
     }//end of else if
     else{
         //high card to break ties
@@ -331,8 +365,8 @@ void compareHands(Player& human, Computer& enemy, string& message) {
 }//end of compareHands
 
 int main() {
-    //set console to utf-8 for suit symbols
-    system("chcp 65001 > nul"); //removed because windows os only
+    //UTF-8 console for suit symbols (windows only)
+    system("chcp 65001 > nul");
     srand((unsigned int)time(0));
 
     Deck deck;
@@ -357,6 +391,8 @@ int main() {
     int opponentTurnOver = false;
 	bool readyForNextGameState = false;
 	bool readyForShop = false;
+    int discardsThisRound = 0;
+    int drawsThisRound = 0;
 
     //intialize enemy but do not show hand
     Computer opponent; 
@@ -365,7 +401,7 @@ int main() {
         opponent.addCard(deck.draw());
     }//end of for loop
 
-	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot};
+	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot, gameState, discardsThisRound, drawsThisRound};
 
     drawUI(player, deck, selected, message);
 
@@ -779,11 +815,17 @@ int main() {
 
 
         }
-        //shop for tarot cards - lets the player manipulate their hand or oppnent's hand in a unique way
+        //shop (tarot purchasing; not wired up yet)
         else if (state == 2) {
-            //TODO: add actual shop functionality (if time permits)
+            if(showingDeck){
+                showingDeck = false;
+                drawShop(inP);
+                continue;
+            }
+            //TODO: real shop inventory
             switch (key) {
                 case KEY_SPACE: { //will be used to exit the shop and start the next round
+                    //hand were already returned to the deck on shop entry
                     state = 1;
                     gameState = 0; //reset game state to 0 (for new round)
 					readyForShop = false; //reset shop state
@@ -792,13 +834,38 @@ int main() {
                     alreadyDrew = false; //reset draw state
 					opponentTurnOver = false; //reset opponent turn state
                     readyForNextGameState = true; //ready for next state in new round
+                    discardsThisRound = 0;
+                    drawsThisRound = 0;
 
                     //rest the message for the next round
 					message = "Starting a new round! Adding to the ante...";
 					message2 = "";
 					message3 = "";
 
-                    drawGame(inP);
+                    break;
+                }
+                case KEY_D:{
+                    showingDeck = true;
+                    clearScreen();
+                    deck.display();
+                    cout << endl << "Press any key to return to the shop..." << endl;
+                    continue;
+                }
+                case KEY_1:{
+                    //no op purchase just to exercise the token flow
+                    const int cost = 5;
+                    if(player.getTokens() < cost){
+                        message3 = "Not enough tokens (need " + to_string(cost) + ", have " + to_string(player.getTokens()) + ").";
+                    }
+                    else{
+                        player.changeTokens(-cost);
+                        message3 = "Bought Item 1 for " + to_string(cost) + " tokens.";
+                    }
+                    drawShop(inP);
+                    break;
+                }
+                case KEY_Q: {
+                    running = false;
                     break;
                 }
                 default: {
@@ -833,4 +900,3 @@ int main() {
 
     return 0;
 }
-
