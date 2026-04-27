@@ -136,7 +136,7 @@ int Player::getTokens() const {
     Return: the amount of tokens the player now has after update
 */
 int Player::changeTokens(int amount) {
-    tokens += amount; //increase tokens by amount
+    tokens = amount; //increase tokens by amount
     return tokens;
 }
 
@@ -158,7 +158,7 @@ int Player::getCurrency(){
     Return: None
 */
 void Player::setCurrency(int money){
-    currency += money; //increase chips by x amount of money
+    currency = money; //increase chips by x amount of money
 }//end of setCurrency
 
 
