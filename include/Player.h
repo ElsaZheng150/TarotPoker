@@ -4,8 +4,9 @@
 #include <vector>
 #include "Card.h"
 #include "Deck.h"
-#include "Computer.h"
 using namespace std;
+
+class Computer;
 
 class Player {
 private:
