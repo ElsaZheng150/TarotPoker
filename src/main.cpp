@@ -688,8 +688,9 @@ int main() {
                     drawGame(inP);
                     break;
                 }
+                //ante is automatic, so we dont need to use SPACE to advance to ante
                 case KEY_SPACE: {
-                    if(gameState == 0 && !alreadyBet){ //ante is automatic, so we dont need to use SPACE to advance to ante
+                    if(gameState == 0 && !alreadyBet){ 
                         //allow player to read initial message about ante before progressing
                         drawGame(inP);
                         break;
@@ -861,6 +862,25 @@ int main() {
                 }
 
 				//player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
+                //allow the player to use tarot cards before making any bets
+                char useCard; //Y/y will use card
+                cout << "Do you want to use an attack card before making a bet? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useAttackCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+                cout << "Do you want to use a viewing card before making a bet? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useViewingCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+
                 message2 = "Your turn to bet!";
 				drawGame(inP);
                 if (alreadyBet == false) {
@@ -898,6 +918,25 @@ int main() {
                 }
 
                 //player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
+                //allow the player to use tarot cards before making any bets
+                char useCard; //Y/y will use card
+                cout << "Do you want to use an attack card? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useAttackCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+                cout << "Do you want to use a viewing card? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useViewingCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+
                 message2 = "Your turn to bet!";
                 drawGame(inP);
                 if (alreadyBet == false) {
@@ -950,7 +989,7 @@ int main() {
 				}
             }
 
-            // Possible tarots
+            // Possible tarots if we expand on game in the future 
             /*
             Strength: adds value of 1 to selected card
             The Devil: subtracts value of 1 from selected card
@@ -962,7 +1001,7 @@ int main() {
             The Sun: convert two cards in your hand to hearts
             The World: convert two cards in your hand to spades
 
-            Wheel of Fortune: reveal 1-5 of opponent's cards
+            Wheel of Fortune: reveal 1-5 of opponent's cards (DONE)
 
             swap a card in your hand with a card in the opponent's hand
             convert a card in your hand to a wild card
