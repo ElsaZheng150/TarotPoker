@@ -54,7 +54,7 @@ void Player::changeCardSuit(int index, const string& newSuit) {
     Return: None, print to console
 */
 void Player::displayHand() const {
-    //input validation, ensure user has cards
+    //ensure user has cards
     if (hand.empty()) { 
         cout << "Your hand is empty." << endl;
         return;

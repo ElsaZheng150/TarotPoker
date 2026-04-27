@@ -15,14 +15,15 @@ using namespace std;
 
 // struct to pass all parameters into drawGame so it isn't cluttered
 struct InputParams {
-    Player& player;
-    Deck& deck;
-    int& selected;
-    string& message;
+    Player& player; //player object
+    Deck& deck; //the deck object
+    int& selected; //index for currently selected card
+    //UI messages
+    string& message; 
 	string& message2;
 	string& message3;
-    Computer& opponent;
-    int& pot; 
+    Computer& opponent; //basic AI opponent
+    int& pot; //total chips being bet on
 };
 
 /*
@@ -142,9 +143,10 @@ void drawGame(const InputParams& inP) {
         std::cout << endl;
     }
 
+    //formmating
     std::cout << endl;
     std::cout << "=========================================" << endl << endl;
-    std::cout << "Total pot: " << inP.pot << endl << endl;
+    std::cout << "Total pot: " << inP.pot << endl << endl; //show how much is being bet on
 
     std::cout << inP.message << endl;
     std::cout << inP.message2 << endl;
@@ -158,7 +160,8 @@ void drawGame(const InputParams& inP) {
     Return: None, print to console
 */
 void drawShop(InputParams inP) {
-    clearScreen();
+    clearScreen(); //remove any previous text
+    //display what the Tarot shop will look like
     std::cout << "=== Tarot Poker - Shop ===" << endl;
     std::cout << endl;
     std::cout << "|---| Item 1 |---|     |---| Item 2 |---|     |---| Item 3 |---|" << endl;
@@ -187,11 +190,16 @@ void displayWinner(int whoWon, string& message){
     }//end of if
 }//end of displayWinner
 
-//handle the playerBet
+/*
+    Function: handlePlayerBet
+    Purpose: allow player to place bets
+    Parameters: player, amount of money being bet, message to the user, optional All in
+    Return: None
+*/
 void handlePlayerBet(Player& player, int&pot, string& message, int ALL = 777){
-
+    //default bet
     std::cout << "Place CUSTOM BET or ALL IN [777]: ";
-    int numBetMoney;
+    int numBetMoney; //hold amount of money being bet
     if (!(cin >> numBetMoney)) {//take in user input
         cin.clear();
         cin.ignore(1000, '\n'); //clear input buffer if invalid input
@@ -216,7 +224,6 @@ void handlePlayerBet(Player& player, int&pot, string& message, int ALL = 777){
             message = "No chips added to the pot.";
         }
 	}//end of else
-
 }//end of handlePlayerBet
 
 /*
@@ -420,23 +427,27 @@ void compareHands(Player& human, Computer& enemy, string& message) {
 */
 int main() {
     //set console to utf-8 for suit symbols
-    system("chcp 65001 > nul"); //removed because windows os only
-    srand((unsigned int)time(0));
+    system("chcp 65001 > nul"); //windows only
+    srand((unsigned int)time(0)); //seed random number generator using current time
 
-    Deck deck;
-    deck.shuffle();
-    Player player; 
+    Deck deck; //create the deck of cards
+    deck.shuffle(); //shuffle the deck for randomness
+    Player player; //create the player (user)
 
-    int selected = 0;
+    int selected = 0; //index of the currently selected card in the player's hand
+    
+    //for UI
     string message = "Welcome to Tarot Poker!";
     string message2 = ""; // extra message if needed
 	string message3 = ""; // used for messages like "You can't bet right now" & "You can't draw right now"
-    bool running = true;
-    bool showingDeck = false;
+   
+    //game control variables
+    bool running = true; //main game loop, keeps game continuing
+    bool showingDeck = false; //check if deck is displaying
 
     int state = 0; //0 for draw/discard functionality, 1 for the actual game, 2 for shop
 	int gameState = 0; //0 for initial bet, 1 for dealing, 2 for 1st bet, 3 for draw discard, 4 for 2nd bet, 5 for showdown
-    int chips = 100; 
+    int chips = 100; //initial 100 chips for the player
 	int betChips = 0; // tracks how many chips the player has bet in the current betting round
     int pot = 0; // total chips bet by all players
 	int ante = 1; // initial bet amount 
@@ -447,14 +458,15 @@ int main() {
 	bool readyForShop = false; //check if can use shop
 
     //intialize enemy but do not show hand
-    Computer opponent;
+    Computer opponent; //Basic AI enemy
 
-    //declare parameters
+    //declare parameters for UI functions
 	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot};
 
     //display the game
     drawUI(player, deck, selected, message);
 
+    //set starting chips 100 for both parties
     player.setCurrency(100);
 	opponent.setCurrency(100);
 
@@ -463,108 +475,115 @@ int main() {
         int key = readKey(); //read in user input
 
 		//main menu for testing deck and hand functionality (preview)
-        if (running && state == 0) {
-            if (showingDeck) {
+        if (running && state == 0) { 
+            if (showingDeck) {//if deck displayed, return to normal view
                 showingDeck = false;
                 drawUI(player, deck, selected, message);
-                continue;
+                continue; //skip rest of the loop and wait for more user input
             }
 
-            switch (key) {
-                case KEY_LEFT: {
-                    if (selected > 0) selected--;
+            switch (key) { //based on which key user presses
+                case KEY_LEFT: { //move selection cursor to the left within player's hand
+                    if (selected > 0) selected--; //prevent going out of bounds
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_RIGHT: {
+                case KEY_RIGHT: { //move selection to the right
+                    //only move if withing a valid range
                     if (player.handSize() > 0 && selected < player.handSize() - 1)
-                        selected++;
+                        selected++;  
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_1: {
-                    if (deck.isEmpty()) {
+                case KEY_1: { //draw a card from the deck into the player's hand
+                    if (deck.isEmpty()) { //notify player if can no longer draw more cards
                         message = "The deck is empty!";
                     }
                     else {
-                        Card drawn = deck.draw();
-                        message = "Drew: " + drawn.display();
-                        player.addCard(drawn);
-                        if (player.handSize() == 1) selected = 0;
+                        Card drawn = deck.draw(); //draw from the top of the deck
+                        message = "Drew: " + drawn.display(); //show which card they got
+                        player.addCard(drawn); //add into hand
+                        //ensure selection index is valid if first card
+                        if (player.handSize() == 1) selected = 0; 
                     }
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_2: {
-                    if (!player.hasCards()) {
+                case KEY_2: { //discard a card
+                    if (!player.hasCards()) { //discard nothing if player has no cards
                         message = "Hand is empty. Nothing to discard.";
                     }
                     else {
+                        //show which card was discarded
                         message = "Discarded: " + player.getHand()[selected].display();
-                        player.discardCard(selected);
+                        player.discardCard(selected); //disard card from hand
+                        //adjust selection index if the last card was removed
                         if (selected >= player.handSize() && selected > 0)
                             selected--;
                     }
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_3: {
+                case KEY_3: { //modify card value
                     if (!player.hasCards()) {
                         message = "Hand is empty.";
                     }
                     else {
                         string oldDisplay = player.getHand()[selected].display();
-                        player.getHand()[selected].incrementValue();
+                        player.getHand()[selected].incrementValue(); //increase card value 
+                        //show player what got changed
                         message = "Changed: " + oldDisplay + " -> " + player.getHand()[selected].display();
                     }
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_4: {
+                case KEY_4: { //change the suit of the card
                     if (!player.hasCards()) {
                         message = "Hand is empty.";
                     }
                     else {
                         string oldDisplay = player.getHand()[selected].display();
-                        player.getHand()[selected].cycleSuit();
+                        player.getHand()[selected].cycleSuit(); //change the suit here
+                        //display what got changed
                         message = "Changed: " + oldDisplay + " -> " + player.getHand()[selected].display();
                     }
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_D: {
-                    showingDeck = true;
-                    clearScreen();
-                    deck.display();
-                    std::cout << endl << "Press any key to return..." << endl;
+                case KEY_D: { //show what cards are in the deck
+                    showingDeck = true; 
+                    clearScreen(); //clear before display for clean console
+                    deck.display(); //show the deck
+                    std::cout << endl << "Press any key to return..." << endl; //instructions
                     break;
                 }
-                case KEY_R: {
-                    if (player.handSize() == 0 || opponent.handSize() == 0) {
-                        message = "Both players needs cards in hand.";
+                case KEY_R: { //Fight with the computer using their hands
+                    //ensure players are following the rules of poker 
+                    if (player.handSize() != 5 || opponent.handSize() != 5) {
+                        message = "Both players needs 5 cards in hand.";
                     }
                     else {
                         //player hands competes against the enemy
                         compareHands(player, opponent, message);
                         //returns all to deck
                         player.returnAllToDeck(deck);
-                        deck.shuffle();
+                        deck.shuffle(); //shuffles deck for next round
                         selected = 0;
-                        message = "All cards returned to deck and shuffled.";
+                        message = "All cards returned to deck and shuffled."; //notify player
                     }
                     drawUI(player, deck, selected, message);
                     break;
                 }
-                case KEY_S: {
-                    state = 1;
+                case KEY_S: { //start the game
+                    state = 1; //main game mode
                     //empty player hand before starting new game
                     if (player.handSize() > 0) {
                         player.returnAllToDeck(deck);
                     }
-					drawGame(inP);
+					drawGame(inP); //get the game
                     break;
                 }
-                case KEY_Q: {
+                case KEY_Q: { //quit 
                     running = false;
                     break;
                 }
@@ -574,16 +593,18 @@ int main() {
 
         //started 5 card game w/ opponent (CPU)
 		if (running && state == 1) {
+            //if deck view is active, return to game UI
             if (showingDeck) {
                 showingDeck = false;
-                drawGame(inP);
+                drawGame(inP); //get the game
                 continue;
             }
 
-            message3 = "";
+            message3 = ""; //reset error/status message
 
             switch (key) {
-                case KEY_LEFT: {
+                //navigate hand selection (can go left or right with arrow keys)
+                case KEY_LEFT: { 
                     if (selected > 0) selected--;
                     drawGame(inP);
                     break;
@@ -600,27 +621,28 @@ int main() {
                         drawGame(inP);
                         break;
 					}
-					if (readyForNextGameState == false) {
+					if (readyForNextGameState == false) { //prevent users from doing something wrong
                         message3 = "You can't progress the game state right now.";
                         drawGame(inP);
                         break;
                     }
-                    else {
+                    else { //allow the users to move on
                         gameState++;
                         readyForNextGameState = false;
 						opponentTurnOver = false;
 						betChips = 0;
 					}
-                    if (readyForShop) {
+                    if (readyForShop) { //check if users can buy things from the shop
                         state = 2;
                         drawShop(inP);
                     }
-                    else if (!readyForShop) {
+                    else if (!readyForShop) { 
 						drawGame(inP);
                     }
                     break;
                 }
                 case KEY_1: {
+                    //first check if player can draw cards before drawing
                     if (gameState != 3) {
                         message3 = "You can't draw cards right now.";
 						drawGame(inP);
@@ -633,16 +655,17 @@ int main() {
 					if (player.handSize() >= 5) { //check if hand is full before drawing
                         message3 = "Hand is full. Discard a card before drawing.";
                     }
-                    else {
-                        Card drawn = deck.draw();
-                        message2 = "Drew: " + drawn.display();
-                        player.addCard(drawn);
-                        if (player.handSize() == 1) selected = 0;
+                    else { //adding cards to hand
+                        Card drawn = deck.draw(); //the card drawn
+                        message2 = "Drew: " + drawn.display(); //display which card was selected
+                        player.addCard(drawn); //add card in
+                        if (player.handSize() == 1) selected = 0; //change card being selected to the only card
                     }
                     drawGame(inP);
                     break;
                 }
                 case KEY_2: {
+                    //check if user can disard cards before allowing them to discard cards
                     if (gameState != 3) {
                         message3 = "You can't discard cards right now.";
                         drawGame(inP);
@@ -652,10 +675,10 @@ int main() {
                         message3 = "Hand is empty. Nothing to discard.";
                     }
                     else {
-                        message2 = "Discarded: " + player.getHand()[selected].display();
-                        player.discardCard(selected);
+                        message2 = "Discarded: " + player.getHand()[selected].display(); //let users know what's going on
+                        player.discardCard(selected); //discard card
                         if (selected >= player.handSize() && selected > 0)
-                            selected--;
+                            selected--; //change which card is being selected
                         //TODO: add a counter to keep track of how many cards the player has discarded (or use an existing var/func)
                         //TODO: update draw() or KEY_1 case to not allow the player to draw more than discarded
                         //TODO: limit the amount of times a player can exchange to once per round (currently they can keep discarding and drawing)
@@ -668,13 +691,14 @@ int main() {
                     break;
                 }
                 case KEY_D: {
-                    showingDeck = true;
-                    clearScreen();
+                    //show users the cards in the deck
+                    showingDeck = true; 
+                    clearScreen(); //clear screen first to keep clean console view
                     deck.display();
-                    std::cout << endl << "Press any key to return..." << endl;
+                    std::cout << endl << "Press any key to return..." << endl; //instructions
                     continue;
                 }
-                case KEY_R: {
+                case KEY_R: { //playing the game
                     if (gameState != 5) {
                         drawGame(inP);
                         break;
@@ -684,20 +708,20 @@ int main() {
                         message3 = "Both players needs cards in hand.";
                     }
                     else {
-                        compareHands(player, opponent, message);
-                        //returns all to deck
+                        compareHands(player, opponent, message); //check who has better hand
+                        //returns all to deck after game is done
                         player.returnAllToDeck(deck);
                         opponent.returnAllToDeck(deck);
-                        deck.shuffle();
-                        selected = 0;
-                        message2 = "All cards returned to deck and shuffled.\nPress SPACE to enter the shop.";
+                        deck.shuffle(); //shuffle cards for next round
+                        selected = 0; //reset which card is selected
+                        message2 = "All cards returned to deck and shuffled.\nPress SPACE to enter the shop."; //instructions for user
 						readyForNextGameState = true;
                     }
                     drawGame(inP);
                     break;
                 }
-                case KEY_Q: {
-                    running = false;
+                case KEY_Q: { //quit
+                    running = false; 
                     break;
                 }
 			}
@@ -706,23 +730,23 @@ int main() {
                 //initial bet (automatic ante)
                 message3 = ""; //reset message 3 (error)
                 if (player.getCurrency() <= 0) { //check if player has sufficient funds to continue before ante
-                    message = "You are out of funds. Get out. NOW!";
+                    message = "You are out of funds. Get out. NOW!"; //give user update messages
                     drawGame(inP);
                     std::this_thread::sleep_for(std::chrono::milliseconds(3000)); //pause to let player read message
                     running = false;
                     break;
                 }
 				if (opponent.getCurrency() <= 0) { //check if opponent has sufficient funds to continue before ante
-                    message = "Opponent is out of funds. You win! Get out while you're ahead!";
+                    message = "Opponent is out of funds. You win! Quit while you're ahead!"; //update messages
                     drawGame(inP);
                     std::this_thread::sleep_for(std::chrono::milliseconds(2000)); //pause to let player read message
                     running = false;
                     break;
                 }
                 readyForNextGameState = true;
-                pot += ante * 2;
-                message = "Ante " + to_string(ante) + ": Initial bet of " + to_string(ante) + "\n";
-                message += "Opponent bets 1.\nYou bet 1.\n";
+                pot += ante * 2; //update how much is being bet
+                message = "Ante " + to_string(ante) + ": Initial bet of " + to_string(ante) + "\n"; //show users their actions
+                message += "Opponent bets 1.\nYou bet 1.\n"; //allow users to see what computer is betting as well
                 drawGame(inP);
                 alreadyBet = true;
             }
@@ -732,15 +756,15 @@ int main() {
                 //dealing phase
 				readyForNextGameState = true;
                 message = "Dealing cards...\n";
-                for (int i = 0; i < 5; i++) {
-                    Card drawn = deck.draw();
+                for (int i = 0; i < 5; i++) { //deal five cards (the max) to both players (user and enemy AI)
+                    Card drawn = deck.draw(); //draw a card
                     message += "Dealt: " + drawn.display() + "\n";
-                    player.addCard(drawn);
+                    player.addCard(drawn); //add card into hand
                     drawGame(inP);
 
                     std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
 
-                    opponent.addCard(deck.draw());
+                    opponent.addCard(deck.draw()); //add card into hand
                     drawGame(inP);
                     std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
                 }
@@ -756,14 +780,14 @@ int main() {
                 readyForNextGameState = true;
                 message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
-                    int bet = 1 + rand() % ante;
-                    for (int i = 0; i < bet; i++) {
+                    int bet = 1 + rand() % ante; //random amount of the opponent
+                    for (int i = 0; i < bet; i++) { //handle currency for the opponent
                         opponent.setCurrency(opponent.getCurrency() - bet);
-                        pot++;
+                        pot++; //update how much is being bet in total
                         drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
                     }
-                    message = "Opponent bet " + to_string(bet) + " chips.";
+                    message = "Opponent bet " + to_string(bet) + " chips."; //alow users to see what's going on with the computer
                     opponentTurnOver = true;
                     drawGame(inP);
                 }
@@ -772,9 +796,9 @@ int main() {
                 message2 = "Your turn to bet!";
 				drawGame(inP);
                 if (alreadyBet == false) {
-                    handlePlayerBet(player, pot, message);
+                    handlePlayerBet(player, pot, message); //let the player make a bet
                     alreadyBet = true;
-                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed.";
+                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed."; //show them what they bet
                     drawGame(inP);
                 }
 			}
@@ -787,15 +811,15 @@ int main() {
                 message = "Draw or discard cards!";
 				//TODO: make opponent's draw/discard smarter (currently random num of cards discarded/drawn)
                 if (opponentTurnOver == false) {
-                    int cards = rand() % 4;
+                    int cards = rand() % 4; //give opponent random cards
                     for (int i = 0; i < cards; i++) {
-                        opponent.discardCard(rand() % opponent.handSize());
-						drawGame(inP);
+                        opponent.discardCard(rand() % opponent.handSize()); //allow it to discard
+						drawGame(inP); 
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
 
                     }
                     for (int i = 0; i < cards; i++) {
-                        opponent.addCard(deck.draw());
+                        opponent.addCard(deck.draw()); //allow it to add cards
 						drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
 					}
@@ -812,14 +836,14 @@ int main() {
                 readyForNextGameState = true;
                 message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
-                    int bet = 1 + rand() % ante;
+                    int bet = 1 + rand() % ante; //give opponent a random bet
                     for (int i = 0; i < bet; i++) {
                         opponent.setCurrency(opponent.getCurrency() - bet);
-                        pot++;
+                        pot++; //update how much is being bet
                         drawGame(inP);
                         std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
                     }
-                    message = "Opponent bet " + to_string(bet) + " chips.";
+                    message = "Opponent bet " + to_string(bet) + " chips."; //show player how much enemy bets 
                     opponentTurnOver = true;
                     drawGame(inP);
                 }
@@ -828,9 +852,9 @@ int main() {
                 message2 = "Your turn to bet!";
                 drawGame(inP);
                 if (alreadyBet == false) {
-                    handlePlayerBet(player, pot, message);
-                    alreadyBet = true;
-                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed.";
+                    handlePlayerBet(player, pot, message); //allow bets to be placed
+                    alreadyBet = true; //ensure bet was placed
+                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed."; //update message
                     drawGame(inP);
                 }
             }
@@ -842,7 +866,7 @@ int main() {
                 message2 = "";
                 readyForShop = true;
                 if (readyForNextGameState == false) {
-                    message = "Press [R] to end the round and see who wins!";
+                    message = "Press [R] to end the round and see who wins!"; //instructions for the user
                 }
 				
 				drawGame(inP);
@@ -899,8 +923,8 @@ int main() {
         }
     }
 
-    clearScreen();
-    std::cout << "Goodbye!" << endl;
+    clearScreen(); //remove text as game has ended
+    std::cout << "Goodbye!" << endl; //ending message
 
     return 0;
 }

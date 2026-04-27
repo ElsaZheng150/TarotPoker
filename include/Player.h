@@ -8,8 +8,8 @@ using namespace std;
 
 class Player {
 private:
-    vector<Card> hand;
-    vector<Card> discardPile;
+    vector<Card> hand; //what cards the player has
+    vector<Card> discardPile; //what cards the player is swapping out
     int tokens = 0; //secondary currency, awarded to the winner at showdown
     int currency = 0; //amount of chips a player has to bet 
     int betAmount; //default all in
