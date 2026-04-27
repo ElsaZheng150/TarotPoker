@@ -10,7 +10,7 @@ struct Card {
     string value; //Ace, 2-10, Jack, Queen, King 
     int numericValue;    // numeric version for comparisons (2-14, ace is 14, king is 13, queen is 12, jack is 11)
 
-    Card(string suit, string value, int numericValue); //constructor
+    Card(string suit, string value, int numericValue); //constructor for regular cards
     string suitSymbol() const; //what suit the card has
     string shortValue() const; //what the card is
     string display() const; //display the card
