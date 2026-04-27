@@ -6,6 +6,8 @@
 #include "Deck.h"
 using namespace std;
 
+class Computer;
+
 class Player {
 private:
     vector<Card> hand; //what cards the player has
@@ -13,6 +15,8 @@ private:
     int tokens = 0; //secondary currency, awarded to the winner at showdown
     int currency = 0; //amount of chips a player has to bet 
     int betAmount; //default all in
+    int attackCards; //attack tarot card that allows player to change the value of a random card from opponent's hand, track amount
+    int viewingCards; //allows players to see a random card from the opponent's hand, track amount
 
 public:
     void addCard(Card card); //draw a card
@@ -29,6 +33,10 @@ public:
     void setCurrency(int money); //change the amount of chips the player has
     vector<Card>& getHand(); //retrieve what cards the player has
     vector<Card>& getDiscardPile(); //retrieve what cards have been swapped out
+
+    //use tarot cards
+    void useAttackCard(Computer& enemy);
+    void useViewingCard(Computer& enemy);
 
     //tokens (secondary currency)
     int getTokens() const; //show how many tokens the player has

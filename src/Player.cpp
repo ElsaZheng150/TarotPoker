@@ -1,7 +1,9 @@
 #include "Player.h"
+#include "Computer.h"
 #include "Card.h"
 #include <vector>
 #include <iostream>
+#include <random>
 using namespace std;
 
 /*
@@ -136,7 +138,7 @@ int Player::getTokens() const {
     Return: the amount of tokens the player now has after update
 */
 int Player::changeTokens(int amount) {
-    tokens += amount; //increase tokens by amount
+    tokens = amount; //increase tokens by amount
     return tokens;
 }
 
@@ -158,7 +160,7 @@ int Player::getCurrency(){
     Return: None
 */
 void Player::setCurrency(int money){
-    currency += money; //increase chips by x amount of money
+    currency = money; //increase chips by x amount of money
 }//end of setCurrency
 
 
@@ -181,3 +183,54 @@ int Player::getBetAmount(){
 void Player::setBetAmount(int amount){
     betAmount = amount; //set new bet amount
 }//end of setBetAmount
+
+/*
+    Function: useAttackCard
+    Purpose: remove a random card from opponent's hand
+    Parameter(s): Enemy
+    Return: None
+*/
+void Player::useAttackCard(Computer& enemy){
+    //check if player has any attack cards
+    if(attackCards <= 0){
+        cout << "No attack cards to use" << endl;
+    }//end of if
+    else{
+        //remove a random card from opponent
+        vector<Card> opponent = enemy.getHand();
+        int numCards = opponent.size(); //check hand size, do not perform if opponent has no cards
+        if(numCards == 0){
+            cout << "Opponent has no cards to attack. Tarot card will be perserved" << endl;
+        }//end of if
+        else{
+            int randomCard = rand() % numCards; //pick random card from 0-hand size
+            enemy.discardCard(randomCard); //remove card from enemy hand
+            attackCards--; //decrease amount of attack tarot cards
+        }//end of else
+    }//end of else
+}//end of useAttackCard
+
+/*
+    Function: useViewingCard
+    Purpose: View a random card from opponent
+    Parameter(s):
+    Return:
+*/
+void Player::useViewingCard(Computer& enemy){
+    //check if player has any viewing cards
+    if(viewingCards <= 0){
+        cout << "No viewing cards to use" << endl;
+    }//end of if
+    else{
+        vector<Card> opponent = enemy.getHand();
+        int numCards = opponent.size(); //check hand size, do not perform if opponent has no cards
+        if(numCards == 0){
+            cout << "Opponent has no cards to view. Tarot card will be perserved" << endl;
+        }//end of if
+        else{
+            int randomCard = rand() % numCards; //pick random card from 0-hand size
+            opponent.at(randomCard).display(); //show random card on console
+            viewingCards--; //decrease amount of viweing tarot cards
+        }//end of else
+    }//end of else
+}//end of useViewingCard

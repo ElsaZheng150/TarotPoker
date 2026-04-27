@@ -89,8 +89,6 @@ void drawGame(const InputParams& inP) {
 	std::cout << "[SPACE]  Progress game state" << endl;
     std::cout << "[1]      Draw a card" << endl;
     std::cout << "[2]      Discard selected card" << endl;
-	std::cout << "[B]      Bet +1 chip" << endl;
-	std::cout << "[D]      View deck" << endl;
 	std::cout << "[Q]      Quit" << endl << endl;
 
 	//output opponent's status
@@ -207,7 +205,7 @@ void handlePlayerBet(Player& player, int&pot, string& message, int ALL = 777){
     }
     else {
         //valid bet is greater than 0 and less than or equal to all currency (can't go over)
-        //default all in if no valid bet is placed
+        //default 0 if invalid input
         if (numBetMoney > 0 && numBetMoney <= player.getCurrency()) {
             player.setBetAmount(numBetMoney); //set amount if valid
             player.setCurrency(player.getCurrency() - numBetMoney); //subtract from player's currency
@@ -225,6 +223,75 @@ void handlePlayerBet(Player& player, int&pot, string& message, int ALL = 777){
         }
 	}//end of else
 }//end of handlePlayerBet
+
+void handleOpponentExchange(Computer& opponent, Deck& deck, string& message2, InputParams& inP) {
+    int rank = opponent.handEvaluator(opponent.getHand()); //opponent evaluates hand to determine how good it is
+    int discardNum = 0; //number of times opponent discarded cards
+
+    if (rank < 2) { //if rank is below a two pair, try to improve hand by discarding/drawing
+        vector<Card> currentHand = opponent.getHand(); //get current hand to evaluate which cards to discard
+        map<int, int> counts; //map to count frequency of card values
+        for (const auto& card : currentHand) {
+            counts[card.numericValue]++; //count frequency of each card value
+        }
+
+        //Identify which cards to discard based on frequency
+        //E.g. discard the card that is not part of a pair or three of a kind
+        //loop backwards to avoid issues with changing indices after discarding
+        for (int i = (int)currentHand.size() - 1; i >= 0; i--) {
+            if (counts[currentHand[i].numericValue] == 1) { //if the card value is unique, discard it
+                opponent.discardCard(i); //discard card at index i in the hand
+                discardNum++; //increment discard count
+                drawGame(inP);
+                std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
+            }
+        }
+        //Draw back up to 5
+        while (opponent.handSize() < 5 && !deck.isEmpty()) {
+            opponent.addCard(deck.draw()); //draw a card to add to opponent's hand
+            drawGame(inP);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
+        }
+
+        //update message to show how many cards were discarded/drawn by opponent
+        if (discardNum == 1) message2 = "Opponent exchanged 1 card.";
+        else message2 = "Opponent exchanged " + to_string(discardNum) + " cards.";
+    }
+    else {
+        message2 = "Opponent stands pat and keeps their hand.";
+    }
+}
+
+void handleOpponentBet(Computer& opponent, string& message, int& pot, InputParams& inP) {
+    int rank = opponent.handEvaluator(opponent.getHand()); //evaluate opponent's hand
+    int currentChips = opponent.getCurrency(); //get how much currency opponent has to bet
+    int targetBet = 0; //how much the opponent will bet
+
+    //Determine the target bet based on the opponent's hand rank
+    if (rank >= 7) { //four of a kind or better
+        targetBet = currentChips; //All in
+        message = "Opponent went all in!"; //show opponent's action
+    }
+    else if (rank >= 2) {//two pair, three of a kind, straight, flush, or full house
+        targetBet = (int)(currentChips * 0.40);
+        message = "Opponent bet " + to_string(targetBet) + " chips."; //show opponent's action
+    }
+    else { //one pair or lower
+        targetBet = (int)(currentChips * 0.05);
+        if (targetBet < 1 && currentChips > 0) {
+            targetBet = 1; //minimum bet of 1 chip (if they have any chips left)
+            message = "Opponent bet 1 chip."; //show opponent's action
+        }
+        message = "Opponent bet " + to_string(targetBet) + " chips."; //show opponent's action
+    }
+
+    for (int i = 0; i < targetBet; i++) {
+        opponent.setCurrency(opponent.getCurrency() - 1);
+        pot++; //update how much is being bet
+        drawGame(inP);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
+    }
+}
 
 /*
 Keep in case do different method later but decided to go with easier code
@@ -377,7 +444,7 @@ int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
     Parameters: the player, the computer (AI enemy), and what message to print
     Return: 
 */
-void compareHands(Player& human, Computer& enemy, string& message) {
+void compareHands(Player& human, Computer& enemy, string& message, int& pot) {
     vector<Card> player = human.getHand(); //get player hand
     vector<Card> opponent = enemy.getHand(); //get computer opponent hand
     vector<int> playerValues; //numeric values of player's hand
@@ -390,13 +457,9 @@ void compareHands(Player& human, Computer& enemy, string& message) {
     // compare rank first
     if(playerHandRank > enemyHandRank){
         isWinner = 0; //player wins
-        //add bet amount onto total currency
-        human.setCurrency(human.getCurrency() + human.getBetAmount()); 
     }//end of if
     else if(playerHandRank < enemyHandRank){
         isWinner = 1; //enemy wins
-        //take out bet amount during loss
-        human.setCurrency(human.getCurrency() - human.getBetAmount()); 
     }//end of else if
     else{
         //high card to break ties
@@ -404,18 +467,28 @@ void compareHands(Player& human, Computer& enemy, string& message) {
         for (int i = 0; i < (int)playerValues.size(); i++){
             if (playerValues[i] > enemyValues[i]){
                 isWinner = 0; //player wins
-                //add bet amount onto total currency
-                human.setCurrency(human.getCurrency() + human.getBetAmount()); 
                 break;
             }//end of if
             if (playerValues[i] < enemyValues[i]){
                 isWinner = 1; //enemy wins
-                //take out bet amount during loss
-                human.setCurrency(human.getCurrency() - human.getBetAmount());
                 break;
             }//end of if
         }//end of for loop
     }//end of else
+
+    if (isWinner == 0) {
+		human.setCurrency(human.getCurrency() + pot); //give player the pot if they win
+		pot = 0; //reset pot after win
+    }
+    else if(isWinner == 1){
+        enemy.setCurrency(enemy.getCurrency() + pot); //give enemy the pot if they win
+		pot = 0; //reset pot after win
+    }
+    else {
+		human.setCurrency(human.getCurrency() + pot / 2); //split the pot if tie
+		enemy.setCurrency(enemy.getCurrency() + pot / 2); //split the pot if tie
+		pot = 0; //reset pot after split
+    }
     displayWinner(isWinner, message); //display who the winner is
 }//end of compareHands
 
@@ -450,7 +523,7 @@ int main() {
     int chips = 100; //initial 100 chips for the player
 	int betChips = 0; // tracks how many chips the player has bet in the current betting round
     int pot = 0; // total chips bet by all players
-	int ante = 1; // initial bet amount 
+	int ante = 5; // initial bet amount 
     int alreadyBet = false; //check betting status
     int alreadyDrew = false; //check status of drawing cards
     int opponentTurnOver = false; //check what computer is doing
@@ -564,7 +637,7 @@ int main() {
                     }
                     else {
                         //player hands competes against the enemy
-                        compareHands(player, opponent, message);
+                        compareHands(player, opponent, message, pot);
                         //returns all to deck
                         player.returnAllToDeck(deck);
                         deck.shuffle(); //shuffles deck for next round
@@ -615,8 +688,9 @@ int main() {
                     drawGame(inP);
                     break;
                 }
+                //ante is automatic, so we dont need to use SPACE to advance to ante
                 case KEY_SPACE: {
-                    if(gameState == 0 && !alreadyBet){ //ante is automatic, so we dont need to use SPACE to advance to ante
+                    if(gameState == 0 && !alreadyBet){ 
                         //allow player to read initial message about ante before progressing
                         drawGame(inP);
                         break;
@@ -708,7 +782,7 @@ int main() {
                         message3 = "Both players needs cards in hand.";
                     }
                     else {
-                        compareHands(player, opponent, message); //check who has better hand
+                        compareHands(player, opponent, message, pot); //check who has better hand
                         //returns all to deck after game is done
                         player.returnAllToDeck(deck);
                         opponent.returnAllToDeck(deck);
@@ -745,8 +819,10 @@ int main() {
                 }
                 readyForNextGameState = true;
                 pot += ante * 2; //update how much is being bet
-                message = "Ante " + to_string(ante) + ": Initial bet of " + to_string(ante) + "\n"; //show users their actions
-                message += "Opponent bets 1.\nYou bet 1.\n"; //allow users to see what computer is betting as well
+                message = "Ante: Initial bet of " + to_string(ante) + " chips.\n"; //show users their actions
+                message += "Opponent bets " + to_string(ante) + ".\nYou bet " + to_string(ante) + ".\n"; //allow users to see what computer is betting as well
+				player.setCurrency(player.getCurrency() - ante); //subtract ante from player's currency
+				opponent.setCurrency(opponent.getCurrency() - ante); //subtract ante from opponent's currency
                 drawGame(inP);
                 alreadyBet = true;
             }
@@ -780,19 +856,31 @@ int main() {
                 readyForNextGameState = true;
                 message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
-                    int bet = 1 + rand() % ante; //random amount of the opponent
-                    for (int i = 0; i < bet; i++) { //handle currency for the opponent
-                        opponent.setCurrency(opponent.getCurrency() - bet);
-                        pot++; //update how much is being bet in total
-                        drawGame(inP);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
-                    }
-                    message = "Opponent bet " + to_string(bet) + " chips."; //alow users to see what's going on with the computer
+                    handleOpponentBet(opponent, message, pot, inP); //handle opponent's turn to bet
                     opponentTurnOver = true;
                     drawGame(inP);
                 }
 
 				//player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
+                //allow the player to use tarot cards before making any bets
+                char useCard; //Y/y will use card
+                cout << "Do you want to use an attack card before making a bet? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useAttackCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+                cout << "Do you want to use a viewing card before making a bet? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useViewingCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+
                 message2 = "Your turn to bet!";
 				drawGame(inP);
                 if (alreadyBet == false) {
@@ -809,22 +897,10 @@ int main() {
 				alreadyBet = false; //reset bet state for next betting round
                 message2 = "";
                 message = "Draw or discard cards!";
-				//TODO: make opponent's draw/discard smarter (currently random num of cards discarded/drawn)
+				//Opponent exchanges cards based on a hand evaluation of how good their hand is
                 if (opponentTurnOver == false) {
-                    int cards = rand() % 4; //give opponent random cards
-                    for (int i = 0; i < cards; i++) {
-                        opponent.discardCard(rand() % opponent.handSize()); //allow it to discard
-						drawGame(inP); 
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
-
-                    }
-                    for (int i = 0; i < cards; i++) {
-                        opponent.addCard(deck.draw()); //allow it to add cards
-						drawGame(inP);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
-					}
-					message2 = "Opponent drew and discarded " + to_string(cards) + " cards.\n";
-					opponentTurnOver = true;
+					handleOpponentExchange(opponent, deck, message2, inP); //handle opponent's turn to exchange cards
+					opponentTurnOver = true; //end opponent's turn after draw/discard
                 }
 				drawGame(inP);
             }
@@ -836,19 +912,31 @@ int main() {
                 readyForNextGameState = true;
                 message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
-                    int bet = 1 + rand() % ante; //give opponent a random bet
-                    for (int i = 0; i < bet; i++) {
-                        opponent.setCurrency(opponent.getCurrency() - bet);
-                        pot++; //update how much is being bet
-                        drawGame(inP);
-                        std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
-                    }
-                    message = "Opponent bet " + to_string(bet) + " chips."; //show player how much enemy bets 
+					handleOpponentBet(opponent, message, pot, inP); //handle opponent's turn to bet
                     opponentTurnOver = true;
                     drawGame(inP);
                 }
 
                 //player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
+                //allow the player to use tarot cards before making any bets
+                char useCard; //Y/y will use card
+                cout << "Do you want to use an attack card? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useAttackCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+                cout << "Do you want to use a viewing card? [y/n]" << endl;
+                cin >> useCard;
+                if(useCard == 'y' || useCard == 'Y'){
+                    player.useViewingCard(opponent);
+                }//end of if
+                else{
+                    cout << "That's ok. Gambling time!" << endl;
+                }//end of else
+
                 message2 = "Your turn to bet!";
                 drawGame(inP);
                 if (alreadyBet == false) {
@@ -871,7 +959,6 @@ int main() {
 				
 				drawGame(inP);
             }
-
 
         }
         //shop for tarot cards - lets the player manipulate their hand or oppnent's hand in a unique way
@@ -902,7 +989,7 @@ int main() {
 				}
             }
 
-            // Possible tarots
+            // Possible tarots if we expand on game in the future 
             /*
             Strength: adds value of 1 to selected card
             The Devil: subtracts value of 1 from selected card
@@ -914,7 +1001,7 @@ int main() {
             The Sun: convert two cards in your hand to hearts
             The World: convert two cards in your hand to spades
 
-            Wheel of Fortune: reveal 1-5 of opponent's cards
+            Wheel of Fortune: reveal 1-5 of opponent's cards (DONE)
 
             swap a card in your hand with a card in the opponent's hand
             convert a card in your hand to a wild card
