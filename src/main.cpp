@@ -975,7 +975,7 @@ int main() {
         }
         //shop for tarot cards - lets the player manipulate their hand or oppnent's hand in a unique way
         else if (running && state == 2) {
-            //TODO: add actual shop functionality (if time permits)
+            //TODO: add additional shop functionality and cards (if time permits)
             switch (key) {
                 case KEY_SPACE: { //will be used to exit the shop and start the next round
                     //hand were already returned to the deck on shop entry
@@ -988,14 +988,14 @@ int main() {
 					opponentTurnOver = false; //reset opponent turn state
                     readyForNextGameState = false; //reset for next state in new round
 
-                    //rest the message for the next round
+                    //rest of the message for the next round
 					message = "Starting a new round! Adding to the ante...";
 					message2 = "";
 					message3 = "";
 
                     break;
                 }
-                case KEY_D:{
+                case KEY_D:{ //show deck, allow users to return to the shop if they wish
                     showingDeck = true;
                     clearScreen();
                     deck.display();
@@ -1004,18 +1004,34 @@ int main() {
                 }
                 case KEY_1:{
                     //no op purchase just to exercise the token flow
-                    const int cost = 5;
-                    if(player.getTokens() < cost){
+                    const int cost = 50; //default cost is 50 tokens to by a tarot card
+
+                    char userShopChoice;
+
+                    //ask user which card they want to buy
+                    cout << "Would you like to purchase a tarot card for 50 tokens?" << endl;
+                    cout << "Attack Card [A/a], Viewing Card [V/v], No [N/n]" << endl; //shop menu
+                    cin >> userShopChoice;
+
+                    if(player.getTokens() < cost){ //prevent user from buy if they don't have enough
                         message3 = "Not enough tokens (need " + to_string(cost) + ", have " + to_string(player.getTokens()) + ").";
                     }
                     else{
-                        player.changeTokens(-cost);
-                        message3 = "Bought Item 1 for " + to_string(cost) + " tokens.";
+                        if(userShopChoice == 'A' || userShopChoice == 'a'){
+                            player.changeTokens(-cost);
+                            message3 = "Bought an attack card for " + to_string(cost) + " tokens.";
+                            player.buyAttackCards();
+                        }//end of if
+                        if(userShopChoice == 'V' || userShopChoice == 'v'){
+                            player.changeTokens(-cost);
+                            message3 = "Bought a viewing card for " + to_string(cost) + " tokens.";
+                            player.buyViewingCards();
+                        }//end of if
                     }
                     drawShop(inP);
                     break;
                 }
-                case KEY_Q: {
+                case KEY_Q: { //leave (quit)
                     running = false;
                     break;
                 }

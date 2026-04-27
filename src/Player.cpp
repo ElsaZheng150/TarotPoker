@@ -185,6 +185,27 @@ void Player::setBetAmount(int amount){
 }//end of setBetAmount
 
 /*
+    Function: buyAttackCards
+    Purpose: increase the amount of attack cards from shop by 1
+    Parameter(s): None
+    Return: None
+*/
+void Player::buyAttackCards(){
+    attackCards++; //increase count
+    cout << "Congrats on your new card! Use it wisely." << endl; //confirm purchase
+}//end of buyAttackCards
+/*
+    Function: buyViewingCards()
+    Purpose: increase the amount of viewing cards from shop by 1
+    Parameter(s): None
+    Return: None
+*/
+void Player::buyViewingCards(){
+    viewingCards++; //increase count
+    cout << "Congrats on your new card! Use it wisely." << endl; //confirm purchase
+}//end of buyViewingCards
+
+/*
     Function: useAttackCard
     Purpose: remove a random card from opponent's hand
     Parameter(s): Enemy

@@ -35,6 +35,8 @@ public:
     vector<Card>& getDiscardPile(); //retrieve what cards have been swapped out
 
     //use tarot cards
+    void buyAttackCards(); //increase the amount of attack cards from shop
+    void buyViewingCards(); //increase the amount of viewing cards from shop
     void useAttackCard(Computer& enemy);
     void useViewingCard(Computer& enemy);
 
