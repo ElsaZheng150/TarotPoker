@@ -30,6 +30,7 @@ int getch() {
 }//end of getch()
 #endif
 
+//key input
 int readKey() { //read in input
 #ifdef _WIN32 //windows using getch
     int c = _getch();
