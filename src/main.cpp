@@ -1151,7 +1151,7 @@ int main() {
                     break;
                 }
                 case KEY_ENTER: { //buy the currently selected item
-                    const int cost = 50; //default cost is 50 tokens to buy a tarot card
+                    const int cost = 125; //default cost is 125 tokens to buy a tarot card
                     string shopMessage;
                     if (selectedShopItem == 2) {
                         shopMessage = "That slot isn't available yet.";
