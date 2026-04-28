@@ -194,6 +194,9 @@ void Player::buyAttackCards(){
     attackCards++; //increase count
     cout << "Congrats on your new card! Use it wisely." << endl; //confirm purchase
 }//end of buyAttackCards
+
+int Player::getAttackCards() const  { return attackCards; }
+int Player::getViewingCards() const { return viewingCards; }
 /*
     Function: buyViewingCards()
     Purpose: increase the amount of viewing cards from shop by 1

@@ -55,6 +55,7 @@ int readKey() { //read in input
     if (c == 'b' || c == 'B') return KEY_B;
     if (c == 'd' || c == 'D') return KEY_D;
     if (c == 'f' || c == 'F') return KEY_F;
+    if (c == 'h' || c == 'H') return KEY_H;
     if (c == 'r' || c == 'R') return KEY_R;
     if (c == 'q' || c == 'Q') return KEY_Q;
     if (c == 's' || c == 'S') return KEY_S;
@@ -100,6 +101,7 @@ int readKey() { //read in input
     if (c == 'b' || c == 'B') return KEY_B;
     if (c == 'd' || c == 'D') return KEY_D;
     if (c == 'f' || c == 'F') return KEY_F;
+    if (c == 'h' || c == 'H') return KEY_H;
     if (c == 'r' || c == 'R') return KEY_R;
     if (c == 'q' || c == 'Q') return KEY_Q;
     if (c == 's' || c == 'S') return KEY_S;

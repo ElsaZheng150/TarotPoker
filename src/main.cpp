@@ -47,36 +47,29 @@ struct InputParams {
 */
 void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     clearScreen();
-    std::cout << "=== Tarot Poker - Deck System ===" << endl;
-    std::cout << endl;
 
-    //display what cards the player has if any
-    if (player.handSize() == 0) {
-        std::cout << "Your hand is empty." << endl;
-    } else {
-        std::cout << "Your hand: ";
+    //display what cards the player has only if there are any (start screen stays clean)
+    if (player.handSize() > 0) {
+        cout << "Your hand: ";
 		for (int i = 0; i < player.handSize(); i++) { //loop through hand and display cards
             if (i == selected) {
                 // ANSI inverse colors for highlighting
-                std::cout << " \033[7m " << player.getHand()[i].display() << " \033[0m ";
+                cout << " \033[7m " << player.getHand()[i].display() << " \033[0m ";
             } else {
-                std::cout << "  " << player.getHand()[i].display() << "  ";
+                cout << "  " << player.getHand()[i].display() << "  ";
             }
         }
-        std::cout << endl;
+        cout << endl << endl;
     }
 
 	//menu to let user know what actions they can perform to play the game
-    std::cout << endl;
-    std::cout << "Deck: " << deck.size() << "/" << deck.getTotal() << " cards" << endl;
-    std::cout << endl;
-
-    std::cout << "--- Controls ---" << endl;
-	std::cout << "[S]      Start game" << endl;
-    std::cout << "[Q]      Quit" << endl;
+    cout << "--- Controls ---" << endl;
+	cout << "[S]      Start game" << endl;
+	cout << "[H]      Help" << endl;
+    cout << "[Q]      Quit" << endl;
 
     if (!message.empty()) {
-        std::cout << endl << "> " << message << endl;
+        cout << endl << "> " << message << endl;
     }
 }
 
@@ -89,67 +82,68 @@ void drawUI(Player& player, Deck& deck, int selected, const string& message) {
 void drawGame(const InputParams& inP) {
 	clearScreen(); //clear any previous text
 	//print menu and instrictions for the game
-    std::cout << "=== Tarot Poker - In Game ===" << endl;
-    std::cout << endl;
-    std::cout << "[<] [>]  Navigate hand" << endl;
-	std::cout << "[SPACE]  Progress game state" << endl;
-    std::cout << "[1]      Draw a card" << endl;
-    std::cout << "[2]      Discard selected card" << endl;
-	std::cout << "[Q]      Quit" << endl << endl;
+    cout << "=== Tarot Poker - In Game ===" << endl;
+    cout << endl;
+    cout << "[<] [>]  Navigate hand" << endl;
+	cout << "[SPACE]  Progress game state" << endl;
+    cout << "[1]      Draw a card" << endl;
+    cout << "[2]      Discard selected card" << endl;
+	cout << "[H]      Help" << endl;
+	cout << "[Q]      Quit" << endl << endl;
 
 	//output opponent's status
     cout << "Opponent chips: " << inP.opponent.getCurrency() << endl << endl;
 
     if (inP.opponent.handSize() == 0) {
-        std::cout << "Opponent hand is empty." << endl;
+        cout << "Opponent hand is empty." << endl;
     }
     else {
-        std::cout << "Opponent hand: \n\n";
+        cout << "Opponent hand: \n\n";
         bool reveal = (inP.gameState == 5); //only reveal opponent's hand at showdown
         //selector cursor is not shown on opponent's hand outside of an attack/viewing action
         for (int i = 0; i < inP.opponent.handSize(); i++) {
             if (reveal) {
-                std::cout << "  " << inP.opponent.getHand()[i].display() << "  ";
+                cout << "  " << inP.opponent.getHand()[i].display() << "  ";
             } else {
                 // Replaces the oppenet's hand with ?? to hide the suit and value from the player
-                std::cout << " \xe2\x81\x87  ";
+                cout << " \xe2\x81\x87  ";
             }
         }
-        std::cout << endl;
+        cout << endl;
     }
 
     //formatting
-    std::cout << endl;
-	std::cout << "-----------------------------------------" << endl << endl;
+    cout << endl;
+	cout << "-----------------------------------------" << endl << endl;
 
-    std::cout << "Your chips: " << inP.player.getCurrency() << endl << endl;
+    cout << "Your chips: " << inP.player.getCurrency() << endl << endl;
 
     //show player their cards if there are cards
     if (inP.player.handSize() == 0) {
-        std::cout << "Your hand is empty." << endl;
+        cout << "Your hand is empty." << endl;
     }
     else {
-        std::cout << "Your hand: \n\n";
+        cout << "Your hand: \n\n";
         for (int i = 0; i < inP.player.handSize(); i++) {
             if (i == inP.selected) {
                 // ANSI inverse colors for highlighting
-                std::cout << " \033[7m " << inP.player.getHand()[i].display() << " \033[0m ";
+                cout << " \033[7m " << inP.player.getHand()[i].display() << " \033[0m ";
             }
             else {
-                std::cout << "  " << inP.player.getHand()[i].display() << "  ";
+                cout << "  " << inP.player.getHand()[i].display() << "  ";
             }
         }
-        std::cout << endl;
+        cout << endl;
     }
 
     //formmating
-    std::cout << endl;
-    std::cout << "=========================================" << endl << endl;
-    std::cout << "Total pot: " << inP.pot << endl << endl; //show how much is being bet on
+    cout << endl;
+    cout << "=========================================" << endl << endl;
+    cout << "Total pot: " << inP.pot << endl << endl; //show how much is being bet on
 
-    std::cout << inP.message << endl;
-    std::cout << inP.message2 << endl;
-	std::cout << inP.message3 << endl;
+    cout << inP.message << endl;
+    cout << inP.message2 << endl;
+	cout << inP.message3 << endl;
 }
 
 /*
@@ -161,52 +155,96 @@ void drawGame(const InputParams& inP) {
 void drawShop(InputParams inP, int selectedShopItem = 0, const string& shopMessage = "") {
     clearScreen(); //remove any previous text
     //display what the Tarot shop will look like
-    std::cout << "=== Tarot Poker - Shop ===" << endl;
-    std::cout << endl;
-    std::cout << "Tokens: " << inP.player.getTokens() << endl; //show current token count
-    std::cout << endl;
+    cout << "=== Tarot Poker - Shop ===" << endl;
+    cout << endl;
+    cout << "Tokens: " << inP.player.getTokens() << endl; //show current token count
+    cout << endl;
 
     //three shop slots: 0 = Attack, 1 = Viewing, 2 = (reserved)
     const string itemNames[3] = {"Attack Card", "Viewing Card", "Coming Soon"};
-    const int itemCosts[3] = {50, 50, 0};
+    const int itemCosts[3] = {20, 20, 0};
 
     //top row: framed labels with the selected item highlighted (ANSI inverse)
     for (int i = 0; i < 3; i++) {
         if (i == selectedShopItem) {
-            std::cout << " \033[7m|---| Item " << (i + 1) << " |---|\033[0m ";
+            cout << " \033[7m|---| Item " << (i + 1) << " |---|\033[0m ";
         } else {
-            std::cout << " |---| Item " << (i + 1) << " |---| ";
+            cout << " |---| Item " << (i + 1) << " |---| ";
         }
-        if (i < 2) std::cout << "   ";
+        if (i < 2) cout << "   ";
     }
-    std::cout << endl;
+    cout << endl;
 
     //second row: item names
     for (int i = 0; i < 3; i++) {
         string label = itemNames[i];
         //pad to 17 chars to align under the framed labels
         while ((int)label.size() < 17) label = " " + label + (label.size() % 2 == 0 ? "" : " ");
-        if (i == selectedShopItem) std::cout << " \033[7m" << label << "\033[0m ";
-        else                       std::cout << " "       << label << " ";
-        if (i < 2) std::cout << "   ";
+        if (i == selectedShopItem) cout << " \033[7m" << label << "\033[0m ";
+        else                       cout << " "       << label << " ";
+        if (i < 2) cout << "   ";
     }
-    std::cout << endl;
+    cout << endl;
 
     //third row: cost
     for (int i = 0; i < 3; i++) {
         string cost = (itemCosts[i] > 0) ? (to_string(itemCosts[i]) + " tokens") : "--";
         while ((int)cost.size() < 17) cost = " " + cost + (cost.size() % 2 == 0 ? "" : " ");
-        std::cout << " " << cost << " ";
-        if (i < 2) std::cout << "   ";
+        cout << " " << cost << " ";
+        if (i < 2) cout << "   ";
     }
-    std::cout << endl << endl << endl << endl << endl << endl << endl;
+    cout << endl << endl << endl << endl << endl << endl << endl;
 
-    if (!shopMessage.empty()) std::cout << shopMessage << endl;
-    std::cout << endl;
-    std::cout << "[<-] / [->] select item   [ENTER] buy   [SPACE] return to game" << endl;
+    if (!shopMessage.empty()) cout << shopMessage << endl;
+    cout << endl;
+    cout << "[<-] / [->] select item   [ENTER] buy   [SPACE] return to game   [H] help" << endl;
 }
 
-//map a hand-rank int (0-8) to its poker name for showdown messages
+/*
+    Function: drawHelp
+    Purpose: show a help screen with the game flow, hand rankings, token rewards, and tarot info
+    Parameter(s): None
+    Return: None, print to console
+*/
+void drawHelp() {
+    clearScreen();
+    cout << "=== Tarot Poker - Help ===" << endl << endl;
+    cout << "How to play:" << endl;
+    cout << "  1. Ante:        chips are taken from each player to seed the pot." << endl;
+    cout << "  2. Deal:        each side is dealt 5 cards." << endl;
+    cout << "  3. 1st bet:     opponent bets, then you must call or raise (or all-in)." << endl;
+    cout << "  4. Draw/discard: keep up to 5 cards by trading them out (max 5 of each per round)." << endl;
+    cout << "  5. 2nd bet:     opponent bets again; you must call/raise or fold by under-betting." << endl;
+    cout << "  6. Showdown:    the higher hand wins the pot. Both hands are revealed." << endl;
+    cout << "  7. Shop:        spend tokens on Attack or Viewing tarot cards (20 tokens each)." << endl;
+    cout << endl;
+    cout << "Hand rankings (best -> worst) and token reward on win:" << endl;
+    cout << "  Straight Flush ........  45 tokens" << endl;
+    cout << "  Four of a Kind ........  40 tokens" << endl;
+    cout << "  Full House ............  35 tokens" << endl;
+    cout << "  Flush .................  30 tokens" << endl;
+    cout << "  Straight ..............  25 tokens" << endl;
+    cout << "  Three of a Kind .......  20 tokens" << endl;
+    cout << "  Two Pair ..............  15 tokens" << endl;
+    cout << "  Pair ..................  10 tokens" << endl;
+    cout << "  High Card .............   5 tokens" << endl;
+    cout << "  (formula: (rank + 1) * 5 tokens, halved on a tie)" << endl;
+    cout << endl;
+    cout << "Tarot cards (20 tokens each in the shop):" << endl;
+    cout << "  Attack  - discard a random card from the opponent's hand." << endl;
+    cout << "  Viewing - reveal a random card from the opponent's hand." << endl;
+    cout << "  Note:   the opponent can also buy and use tarots against you." << endl;
+    cout << endl;
+    cout << "Press any key to return." << endl;
+    readKey();
+}//end of drawHelp
+
+/*
+    Function: handRankName
+    Purpose: convert a hand-rank integer (0-8) into its poker name for the showdown message
+    Parameter(s): the rank returned by getHandRank
+    Return: the human-readable hand name (e.g. "Full House")
+*/
 string handRankName(int rank) {
     switch (rank) {
         case 0: return "High Card";
@@ -220,7 +258,7 @@ string handRankName(int rank) {
         case 8: return "Straight Flush";
         default: return "Unknown";
     }
-}
+}//end of handRankName
 
 /*
     Function: displayWinner
@@ -244,40 +282,50 @@ void displayWinner(int whoWon, string& message){
 
 /*
     Function: handlePlayerBet
-    Purpose: allow player to place bets
-    Parameters: player, amount of money being bet, message to the user, optional All in
-    Return: None
+    Purpose: allow the player to place a bet, go all in, or fold; bets must meet the opponent's floor
+    Parameters: player, the running pot, message to the user, opponent's bet acting as the minimum
+    Return: True if the player folded, False if they placed (or matched) a valid bet
 */
-void handlePlayerBet(Player& player, int&pot, string& message, int minBet = 0){
+bool handlePlayerBet(Player& player, int&pot, string& message, int minBet = 0){
     //players must at least match the opponent's bet (call) or go all in if they can't afford to
     int allIn = player.getCurrency();
     int floor = (minBet < allIn) ? minBet : allIn; //all-in counts as a call when short-stacked
     while (true) {
         if (floor > 0) {
-            std::cout << "Opponent bet " << minBet << ". Place CUSTOM BET (>= " << floor << ") or ALL IN [" << allIn << "]: ";
+            cout << "Opponent bet " << minBet << ". Place CUSTOM BET (>= " << floor << "), ALL IN [" << allIn << "], or FOLD [F]: ";
         } else {
-            std::cout << "Place CUSTOM BET or ALL IN [" << allIn << "]: ";
+            cout << "Place CUSTOM BET, ALL IN [" << allIn << "], or FOLD [F]: ";
         }
-        int numBetMoney; //hold amount of money being bet
-        if (!(cin >> numBetMoney)) {//take in user input
+        string input;
+        if (!(cin >> input)) { //read raw token so we can detect "F"/"fold"
             cin.clear();
-            cin.ignore(1000, '\n'); //clear input buffer if invalid input
-            std::cout << "Invalid input. Try again." << endl;
+            cin.ignore(1000, '\n');
+            cout << "Invalid input. Try again." << endl;
+            continue;
+        }
+        //fold sentinel: F / f / fold / FOLD
+        if (input.size() > 0 && (input[0] == 'F' || input[0] == 'f')) {
+            return true;
+        }
+        int numBetMoney = 0;
+        try { numBetMoney = stoi(input); }
+        catch (...) {
+            cout << "Invalid input. Try again." << endl;
             continue;
         }
         if (numBetMoney < floor) {
-            std::cout << "Bet must be at least " << floor << " to match the opponent." << endl;
+            cout << "Bet must be at least " << floor << " to match the opponent (or type F to fold)." << endl;
             continue;
         }
         if (numBetMoney > allIn) {
-            std::cout << "You only have " << allIn << " chips." << endl;
+            cout << "You only have " << allIn << " chips." << endl;
             continue;
         }
         //valid bet at or above the floor, within currency (entering allIn here is naturally an all-in)
         player.setBetAmount(numBetMoney);
         player.setCurrency(allIn - numBetMoney);
         pot += player.getBetAmount();
-        return;
+        return false;
     }
 }//end of handlePlayerBet
 
@@ -300,14 +348,14 @@ void handleOpponentExchange(Computer& opponent, Deck& deck, string& message2, In
                 opponent.discardCard(i); //discard card at index i in the hand
                 discardNum++; //increment discard count
                 drawGame(inP);
-                std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
+                this_thread::sleep_for(chrono::milliseconds(500)); //disable if this breaks things
             }
         }
         //Draw back up to 5
         while (opponent.handSize() < 5 && !deck.isEmpty()) {
             opponent.addCard(deck.draw()); //draw a card to add to opponent's hand
             drawGame(inP);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500)); //disable if this breaks things
+            this_thread::sleep_for(chrono::milliseconds(500)); //disable if this breaks things
         }
 
         //update message to show how many cards were discarded/drawn by opponent
@@ -317,8 +365,82 @@ void handleOpponentExchange(Computer& opponent, Deck& deck, string& message2, In
     else {
         message2 = "Opponent stands pat and keeps their hand.";
     }
-}
+}//end of handleOpponentExchange
 
+/*
+    Function: handleOpponentExchangeViewing
+    Purpose: alternate exchange strategy that aims for a flush or pair after the bot peeks at the player's hand
+    Parameter(s): the opponent, the deck to draw from, message line for UI, input params bundle
+    Return: None (currently unused; kept for reference if viewing-mode bot logic is restored)
+*/
+void handleOpponentExchangeViewing(Computer& opponent, Deck& deck, string& message2, InputParams& inP) {
+    vector<Card> hand = opponent.getHand();
+    map<string,int> suitCounts;
+    map<int,int>    valueCounts;
+    for (const auto& c : hand) { suitCounts[c.suit]++; valueCounts[c.numericValue]++; }
+
+    //pick a target: dominant suit (>=3 cards) for flush, else dominant value for pair, else top-2 keep
+    string target_suit = "";
+    int target_value = 0;
+    string strategy = "keep highest two";
+    for (auto& kv : suitCounts) if (kv.second >= 3) { target_suit = kv.first; strategy = "flush in " + kv.first; break; }
+    if (target_suit.empty()) {
+        for (auto& kv : valueCounts) if (kv.second >= 2) { target_value = kv.first; strategy = "pair"; break; }
+    }
+
+    //decide which indices to keep based on strategy
+    vector<bool> keep(hand.size(), false);
+    if (!target_suit.empty()) {
+        for (size_t i = 0; i < hand.size(); i++) keep[i] = (hand[i].suit == target_suit);
+    } else if (target_value > 0) {
+        for (size_t i = 0; i < hand.size(); i++) keep[i] = (hand[i].numericValue == target_value);
+    } else {
+        //keep two highest by value
+        vector<pair<int,size_t>> idx;
+        for (size_t i = 0; i < hand.size(); i++) idx.push_back({hand[i].numericValue, i});
+        sort(idx.begin(), idx.end(), greater<pair<int,size_t>>());
+        for (size_t k = 0; k < idx.size() && k < 2; k++) keep[idx[k].second] = true;
+    }
+
+    //discard non-keep cards (loop backwards so indices stay valid)
+    int discardNum = 0;
+    for (int i = (int)hand.size() - 1; i >= 0; i--) {
+        if (!keep[i]) {
+            opponent.discardCard(i);
+            discardNum++;
+            drawGame(inP);
+            this_thread::sleep_for(chrono::milliseconds(400));
+        }
+    }
+    //draw back up to 5
+    while (opponent.handSize() < 5 && !deck.isEmpty()) {
+        opponent.addCard(deck.draw());
+        drawGame(inP);
+        this_thread::sleep_for(chrono::milliseconds(400));
+    }
+    message2 = "Opponent exchanged " + to_string(discardNum) + " cards (going for " + strategy + ").";
+}//end of handleOpponentExchangeViewing
+
+/*
+    Function: botUseAttackOnPlayer
+    Purpose: bot consumes an attack tarot and discards a random card from the player's hand
+    Parameter(s): the player to target, the UI message line to update
+    Return: None
+*/
+void botUseAttackOnPlayer(Player& target, string& message3) {
+    int n = target.handSize();
+    if (n <= 0) { message3 = "Opponent tried to attack but you had no cards."; return; }
+    int idx = rand() % n;
+    target.discardCard(idx);
+    message3 = "Opponent used an attack tarot! One of your cards was discarded.";
+}//end of botUseAttackOnPlayer
+
+/*
+    Function: handleOpponentBet
+    Purpose: opponent's first bet of the round, sized by hand strength as a fraction of their stack
+    Parameter(s): the opponent, the message line, the running pot, input params bundle for redraws
+    Return: None
+*/
 void handleOpponentBet(Computer& opponent, string& message, int& pot, InputParams& inP) {
     int rank = opponent.handEvaluator(opponent.getHand()); //evaluate opponent's hand
     int currentChips = opponent.getCurrency(); //get how much currency opponent has to bet
@@ -343,21 +465,23 @@ void handleOpponentBet(Computer& opponent, string& message, int& pot, InputParam
     }
 
     opponent.setBetAmount(targetBet); //record opponent's bet so the player handler can require a call/raise
-    for (int i = 0; i < targetBet; i++) {
-        opponent.setCurrency(opponent.getCurrency() - 1);
-        pot++; //update how much is being bet
-        drawGame(inP);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
-    }
-}
+    //move the chips to the pot in one go (instant) instead of one per frame
+    opponent.setCurrency(opponent.getCurrency() - targetBet); //subtract bet from opponent's stack
+    pot += targetBet; //add the full bet to the pot in a single update
+    drawGame(inP);
+}//end of handleOpponentBet
 
-//opponent reacts to the player's bet: re-evaluates its hand and folds, calls, raises, or jams all-in.
-//Returns true when the opponent folds; caller awards the pot to the player and ends the round.
+/*
+    Function: handleOpponentResponse
+    Purpose: opponent reacts to the player's bet by calling, raising, jamming all-in, or folding
+    Parameters: the opponent, the player's bet (call floor), message line, the pot, input params bundle
+    Return: True if the opponent folded (caller awards the pot to the player and ends the round)
+*/
 bool handleOpponentResponse(Computer& opponent, int playerBet, string& message, int& pot, InputParams& inP) {
     int alreadyIn = opponent.getBetAmount(); //chips already wagered this betting round
     int chips = opponent.getCurrency();      //chips still available
     if (alreadyIn >= playerBet || (chips <= 0 && alreadyIn > 0)) {
-        message = "Opponent stays at " + std::to_string(alreadyIn) + " chips.";
+        message = "Opponent stays at " + to_string(alreadyIn) + " chips.";
         return false; //already calling/raising or has nothing left to move
     }
 
@@ -370,8 +494,9 @@ bool handleOpponentResponse(Computer& opponent, int playerBet, string& message, 
     if (rank < 2 && chips > 0) {
         int callCost = shortStack ? chips : callAmount;
         if (callCost * 5 >= chips * 2) {
-            message = "Opponent folded. You win " + std::to_string(pot) + " chips!";
-            inP.player.setCurrency(inP.player.getCurrency() + pot);
+            message = "Opponent folded. You win " + to_string(pot) + " chips!";
+            inP.player.setCurrency(inP.player.getCurrency() + pot); //pot to player on fold
+            opponent.changeTokens(5); //bot folded -> loser consolation tokens
             pot = 0;
             return true;
         }
@@ -389,19 +514,17 @@ bool handleOpponentResponse(Computer& opponent, int playerBet, string& message, 
     total += raise;
     if (total > chips) total = chips;
 
-    for (int i = 0; i < total; i++) {
-        opponent.setCurrency(opponent.getCurrency() - 1);
-        pot++;
-        drawGame(inP);
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
+    //move the chips to the pot in one go (instant) instead of one per frame
+    opponent.setCurrency(opponent.getCurrency() - total); //subtract response from opponent's stack
+    pot += total; //add the full response to the pot in a single update
+    drawGame(inP);
     opponent.setBetAmount(alreadyIn + total); //updated total wager this round
 
-    if (shortStack)     message = "Opponent went all in with " + std::to_string(opponent.getBetAmount()) + " chips.";
-    else if (raise > 0) message = "Opponent raised to "       + std::to_string(opponent.getBetAmount()) + " chips.";
-    else                message = "Opponent called with "     + std::to_string(opponent.getBetAmount()) + " chips.";
+    if (shortStack)     message = "Opponent went all in with " + to_string(opponent.getBetAmount()) + " chips.";
+    else if (raise > 0) message = "Opponent raised to "       + to_string(opponent.getBetAmount()) + " chips.";
+    else                message = "Opponent called with "     + to_string(opponent.getBetAmount()) + " chips.";
     return false;
-}
+}//end of handleOpponentResponse
 
 /*
 Keep in case do different method later but decided to go with easier code
@@ -487,13 +610,21 @@ int getHandRank(const vector<Card>& hand, vector<int>& sortedValues) {
 
     //sort the values in descending value using built in function from algorithm
     sort(cardValues.begin(), cardValues.end(), greater<int>());
-    sortedValues = cardValues; //put sorted values into sortedValues vector
 
     //count the frequencies to determine hand type
     map<int, int> freq; //map to pair value to frequency
     for(size_t j=0; j<cardValues.size(); j++) {
         freq[cardValues[j]]++; //increment count for value at j from hand
     }//end of for loop
+
+    //re-sort the 5 cards by (how often the value appears) first, then (card value).
+    //E.g. pair of 7s with K-5-2 becomes [7,7,K,5,2]; full house 8s over 3s becomes [8,8,8,3,3].
+    //Comparing position-by-position then naturally checks the pair before the kickers.
+    sort(cardValues.begin(), cardValues.end(), [&](int a, int b){
+        if (freq[a] != freq[b]) return freq[a] > freq[b]; //more copies wins
+        return a > b;                                     //ties: higher value wins
+    });
+    sortedValues = cardValues;
 
     bool flush = isFlush(hand); //check if it's a flush using helper
     bool straight = isStraight(cardValues); //check if it's a straight using helper
@@ -586,25 +717,29 @@ void compareHands(Player& human, Computer& enemy, string& message, int& pot) {
         }//end of for loop
     }//end of else
 
-    //token payout scales with the winning hand's rank: (rank+1) * 5
-    int playerTokens = (playerHandRank + 1) * 5;
+    //token payout: winner gets (rank+1)*5 tokens for their hand; loser always gets a base 5 consolation.
+    //On a tie nobody really wins, so both sides take the base 5.
+    int playerTokens = (playerHandRank + 1) * 5; //hand-rank reward scale
     int enemyTokens  = (enemyHandRank  + 1) * 5;
+    const int LOSER_BASE = 5; //flat consolation for the round's loser
 
     if (isWinner == 0) {
 		human.setCurrency(human.getCurrency() + pot); //give player the pot if they win
-		human.changeTokens(playerTokens); //award tokens scaled by winning hand rank
+		human.changeTokens(playerTokens); //winner: hand-rank reward only
+		enemy.changeTokens(LOSER_BASE);   //loser: consolation tokens
 		pot = 0; //reset pot after win
     }
     else if(isWinner == 1){
         enemy.setCurrency(enemy.getCurrency() + pot); //give enemy the pot if they win
-		enemy.changeTokens(enemyTokens); //award tokens scaled by winning hand rank
+		enemy.changeTokens(enemyTokens); //winner: hand-rank reward only
+		human.changeTokens(LOSER_BASE);  //loser: consolation tokens
 		pot = 0; //reset pot after win
     }
     else {
 		human.setCurrency(human.getCurrency() + pot / 2); //split the pot if tie
-		enemy.setCurrency(enemy.getCurrency() + pot / 2); //split the pot if tie
-		human.changeTokens(playerTokens / 2); //split the token reward on a tie
-		enemy.changeTokens(enemyTokens  / 2);
+		enemy.setCurrency(enemy.getCurrency() + pot / 2);
+		human.changeTokens(LOSER_BASE);  //tie: both sides get the base consolation
+		enemy.changeTokens(LOSER_BASE);
 		pot = 0; //reset pot after split
     }
     displayWinner(isWinner, message); //display who the winner is
@@ -653,6 +788,10 @@ int main() {
 	bool readyForNextGameState = false; //check if game can move on
 	bool readyForShop = false; //check if can use shop
 	int selectedShopItem = 0; //arrow-key cursor inside the shop (0=Attack, 1=Viewing, 2=reserved)
+	int botAttackCards = 0;   //tarot cards the opponent currently holds (bot does not use attack tarots for now)
+	int botViewingCards = 0;  //tarot cards the opponent currently holds (viewing)
+	string botMode = "";     //"attack" or "viewing" - whichever it last bought
+	bool botSawPlayerHand = false; //set when the bot consumes a viewing tarot before its exchange
 
     //intialize enemy but do not show hand
     Computer opponent; //Basic AI enemy
@@ -670,6 +809,15 @@ int main() {
     //game to continue until we reach a stopping point
     while (running) { 
         int key = readKey(); //read in user input
+
+        if (key == KEY_H) { //help screen is available from every game phase
+            drawHelp();
+            //repaint the current state's screen so the user is back where they left off
+            if (state == 0)      drawUI(player, deck, selected, message);
+            else if (state == 1) drawGame(inP);
+            else if (state == 2) drawShop(inP, selectedShopItem);
+            continue;
+        }
 
 		//main menu for testing deck and hand functionality (preview)
         if (running && state == 0) { 
@@ -751,7 +899,7 @@ int main() {
                     showingDeck = true; 
                     clearScreen(); //clear before display for clean console
                     deck.display(); //show the deck
-                    std::cout << endl << "Press any key to return..." << endl; //instructions
+                    cout << endl << "Press any key to return..." << endl; //instructions
                     break;
                 }
                 case KEY_R: { //Fight with the computer using their hands
@@ -838,7 +986,15 @@ int main() {
                         selected = 0; //reset which card is selected
                         state = 2;
                         selectedShopItem = 0; //reset shop cursor on entry
-                        drawShop(inP, selectedShopItem);
+
+                        //bot shopping: buy one Attack tarot for 20 tokens whenever it can afford it
+                        string botShopMsg;
+                        if (opponent.getTokens() >= 20) {
+                            opponent.changeTokens(-20);
+                            botAttackCards++;
+                            botShopMsg = "Opponent bought a tarot card.";
+                        }
+                        drawShop(inP, selectedShopItem, botShopMsg);
                     }
                     else if (!readyForShop) { 
 						drawGame(inP);
@@ -909,7 +1065,7 @@ int main() {
                     showingDeck = true; 
                     clearScreen(); //clear screen first to keep clean console view
                     deck.display();
-                    std::cout << endl << "Press any key to return..." << endl; //instructions
+                    cout << endl << "Press any key to return..." << endl; //instructions
                     continue;
                 }
                 case KEY_R: { //playing the game
@@ -943,14 +1099,14 @@ int main() {
                 if (player.getCurrency() <= 0) { //check if player has sufficient funds to continue before ante
                     message = "You are out of funds. Get out. NOW!"; //give user update messages
                     drawGame(inP);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(3000)); //pause to let player read message
+                    this_thread::sleep_for(chrono::milliseconds(3000)); //pause to let player read message
                     running = false;
                     break;
                 }
 				if (opponent.getCurrency() <= 0) { //check if opponent has sufficient funds to continue before ante
                     message = "Opponent is out of funds. You win! Quit while you're ahead!"; //update messages
                     drawGame(inP);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); //pause to let player read message
+                    this_thread::sleep_for(chrono::milliseconds(2000)); //pause to let player read message
                     running = false;
                     break;
                 }
@@ -966,22 +1122,13 @@ int main() {
             
 
             if (gameState == 1 && alreadyDrew == false) {
-                //dealing phase
+                //dealing phase: silently deal five cards to each side (cards just appear in hand)
 				readyForNextGameState = true;
-                message = "Dealing cards...\n";
                 for (int i = 0; i < 5; i++) { //deal five cards (the max) to both players (user and enemy AI)
-                    Card drawn = deck.draw(); //draw a card
-                    message += "Dealt: " + drawn.display() + "\n";
-                    player.addCard(drawn); //add card into hand
-                    drawGame(inP);
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
-
-                    opponent.addCard(deck.draw()); //add card into hand
-                    drawGame(inP);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
+                    player.addCard(deck.draw()); //add card into player's hand
+                    opponent.addCard(deck.draw()); //add card into opponent's hand
                 }
-				message = "Cards dealt!\n";
+				message = "Cards dealt!"; //single confirmation line, no per-card popups
                 drawGame(inP);
 				alreadyBet = false;
                 alreadyDrew = true;
@@ -999,30 +1146,45 @@ int main() {
                 }
 
 				//player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
-                //allow the player to use tarot cards before making any bets
+                //allow the player to use tarot cards before making any bets - only ask for cards they actually own,
+                //and keep asking until they say no or run out of that tarot.
                 char useCard; //Y/y will use card
-                cout << "Do you want to use an attack card before making a bet? [y/n]" << endl;
-                cin >> useCard;
-                if(useCard == 'y' || useCard == 'Y'){
+                while (player.getAttackCards() > 0) {
+                    cout << "You have " << player.getAttackCards() << " attack card(s). Use one before betting? [y/n] ";
+                    cin >> useCard;
+                    if (useCard != 'y' && useCard != 'Y') break;
                     player.useAttackCard(opponent);
                     cout << "Press ENTER to continue..." << endl;
-                    cin.ignore(10000, '\n'); cin.get(); //let the player read the result before the screen redraws
-                }//end of if
-                cout << "Do you want to use a viewing card before making a bet? [y/n]" << endl;
-                cin >> useCard;
-                if(useCard == 'y' || useCard == 'Y'){
+                    cin.ignore(10000, '\n'); cin.get();
+                }
+                while (player.getViewingCards() > 0) {
+                    cout << "You have " << player.getViewingCards() << " viewing card(s). Use one before betting? [y/n] ";
+                    cin >> useCard;
+                    if (useCard != 'y' && useCard != 'Y') break;
                     player.useViewingCard(opponent);
                     cout << "Press ENTER to continue..." << endl;
                     cin.ignore(10000, '\n'); cin.get();
-                }//end of if
+                }
 
                 message2 = "Your turn to bet!";
 				drawGame(inP);
                 if (alreadyBet == false) {
-                    handlePlayerBet(player, pot, message, opponent.getBetAmount()); //let the player make a bet (must call the opponent)
-                    alreadyBet = true;
+                    bool playerFolded = handlePlayerBet(player, pot, message, opponent.getBetAmount()); //let player bet, all-in, or fold
+                    alreadyBet = true; //ensure bet was placed
+                    if (playerFolded) { //player surrendered the round
+                        message = "You folded. Opponent wins " + to_string(pot) + " chips."; //show outcome to user
+                        opponent.setCurrency(opponent.getCurrency() + pot); //hand the pot to the opponent
+                        player.changeTokens(5); //loser consolation tokens
+                        pot = 0; //reset pot after surrender
+                        message2 = ""; message3 = ""; //clear sub-messages for the showdown screen
+                        //jump to showdown so the next SPACE press goes to the shop
+                        gameState = 5; readyForNextGameState = true; readyForShop = true;
+                        opponentTurnOver = true; alreadyDrew = true; //skip remaining phases
+                        drawGame(inP);
+                        continue;
+                    }//end of if (player folded)
                     bool folded = handleOpponentResponse(opponent, player.getBetAmount(), message, pot, inP); //opponent must call, raise, jam, or fold
-                    if (folded) { //fold ends the round; jump to showdown so SPACE goes to shop
+                    if (folded) { //bot fold ends the round; jump to showdown so SPACE goes to shop
                         message2 = ""; message3 = "";
                         gameState = 5; readyForNextGameState = true; readyForShop = true;
                         opponentTurnOver = true; alreadyDrew = true;
@@ -1041,7 +1203,13 @@ int main() {
                 message = "Draw or discard cards!";
 				//Opponent exchanges cards based on a hand evaluation of how good their hand is
                 if (opponentTurnOver == false) {
-					handleOpponentExchange(opponent, deck, message2, inP); //handle opponent's turn to exchange cards
+                    if (botMode == "viewing" && botViewingCards > 0) {
+                        botViewingCards--; botSawPlayerHand = true;
+                        message3 = "Opponent peeked at your hand with a Viewing tarot.";
+                        handleOpponentExchangeViewing(opponent, deck, message2, inP);
+                    } else {
+                        handleOpponentExchange(opponent, deck, message2, inP); //default exchange
+                    }
 					opponentTurnOver = true; //end opponent's turn after draw/discard
                 }
 				drawGame(inP);
@@ -1054,36 +1222,51 @@ int main() {
                 readyForNextGameState = true;
                 message = "Opponent is betting...";
                 if (opponentTurnOver == false) {
+                    //bot tarot usage disabled for now (always-attack mode removed); inventory is no longer consumed
 					handleOpponentBet(opponent, message, pot, inP); //handle opponent's turn to bet
                     opponentTurnOver = true;
                     drawGame(inP);
                 }
 
                 //player turn to bet; call handlePlayerBet function to take in custom bet amount or all in
-                //allow the player to use tarot cards before making any bets
+                //allow the player to use tarot cards before making any bets - only ask for cards they actually own,
+                //and keep asking until they say no or run out of that tarot.
                 char useCard; //Y/y will use card
-                cout << "Do you want to use an attack card? [y/n]" << endl;
-                cin >> useCard;
-                if(useCard == 'y' || useCard == 'Y'){
+                while (player.getAttackCards() > 0) {
+                    cout << "You have " << player.getAttackCards() << " attack card(s). Use one? [y/n] ";
+                    cin >> useCard;
+                    if (useCard != 'y' && useCard != 'Y') break;
                     player.useAttackCard(opponent);
                     cout << "Press ENTER to continue..." << endl;
                     cin.ignore(10000, '\n'); cin.get();
-                }//end of if
-                cout << "Do you want to use a viewing card? [y/n]" << endl;
-                cin >> useCard;
-                if(useCard == 'y' || useCard == 'Y'){
+                }
+                while (player.getViewingCards() > 0) {
+                    cout << "You have " << player.getViewingCards() << " viewing card(s). Use one? [y/n] ";
+                    cin >> useCard;
+                    if (useCard != 'y' && useCard != 'Y') break;
                     player.useViewingCard(opponent);
                     cout << "Press ENTER to continue..." << endl;
                     cin.ignore(10000, '\n'); cin.get();
-                }//end of if
+                }
 
                 message2 = "Your turn to bet!";
                 drawGame(inP);
                 if (alreadyBet == false) {
-                    handlePlayerBet(player, pot, message, opponent.getBetAmount()); //allow bets to be placed (must call the opponent)
+                    bool playerFolded = handlePlayerBet(player, pot, message, opponent.getBetAmount());
                     alreadyBet = true; //ensure bet was placed
+                    if (playerFolded) { //player surrendered the round
+                        message = "You folded. Opponent wins " + to_string(pot) + " chips.";
+                        opponent.setCurrency(opponent.getCurrency() + pot);
+                        player.changeTokens(5); //loser consolation
+                        pot = 0;
+                        message2 = ""; message3 = "";
+                        gameState = 5; readyForNextGameState = true; readyForShop = true;
+                        opponentTurnOver = true; alreadyDrew = true;
+                        drawGame(inP);
+                        continue;
+                    }
                     bool folded = handleOpponentResponse(opponent, player.getBetAmount(), message, pot, inP); //opponent must call, raise, jam, or fold
-                    if (folded) { //fold ends the round; jump to showdown so SPACE goes to shop
+                    if (folded) { //bot fold ends the round; jump to showdown so SPACE goes to shop
                         message2 = ""; message3 = "";
                         gameState = 5; readyForNextGameState = true; readyForShop = true;
                         opponentTurnOver = true; alreadyDrew = true;
@@ -1123,6 +1306,7 @@ int main() {
                     alreadyDrew = false; //reset draw state
                     discardCount = 0; //reset discard counter for next round
                     drawCount = 0;    //reset draw counter for next round
+                    botSawPlayerHand = false; //reset peek flag for next round
 					opponentTurnOver = false; //reset opponent turn state
                     readyForNextGameState = false; //reset for next state in new round
 
@@ -1151,7 +1335,7 @@ int main() {
                     break;
                 }
                 case KEY_ENTER: { //buy the currently selected item
-                    const int cost = 50; //default cost is 50 tokens to buy a tarot card
+                    const int cost = 20; //default cost is 20 tokens to buy a tarot card
                     string shopMessage;
                     if (selectedShopItem == 2) {
                         shopMessage = "That slot isn't available yet.";
@@ -1204,7 +1388,7 @@ int main() {
     }
 
     clearScreen(); //remove text as game has ended
-    std::cout << "Goodbye!" << endl; //ending message
+    cout << "Goodbye!" << endl; //ending message
 
     return 0;
 }
