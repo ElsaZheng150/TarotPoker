@@ -15,8 +15,8 @@ private:
     int tokens = 0; //secondary currency, awarded to the winner at showdown
     int currency = 0; //amount of chips a player has to bet 
     int betAmount; //default all in
-    int attackCards; //attack tarot card that allows player to change the value of a random card from opponent's hand, track amount
-    int viewingCards; //allows players to see a random card from the opponent's hand, track amount
+    int attackCards = 0; //attack tarot card that allows player to change the value of a random card from opponent's hand, track amount
+    int viewingCards = 0; //allows players to see a random card from the opponent's hand, track amount
 
 public:
     void addCard(Card card); //draw a card
@@ -35,8 +35,12 @@ public:
     vector<Card>& getDiscardPile(); //retrieve what cards have been swapped out
 
     //use tarot cards
+    void buyAttackCards(); //increase the amount of attack cards from shop
+    void buyViewingCards(); //increase the amount of viewing cards from shop
     void useAttackCard(Computer& enemy);
     void useViewingCard(Computer& enemy);
+    int getAttackCards() const;  //how many attack tarot cards the player owns
+    int getViewingCards() const; //how many viewing tarot cards the player owns
 
     //tokens (secondary currency)
     int getTokens() const; //show how many tokens the player has

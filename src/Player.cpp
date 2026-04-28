@@ -138,7 +138,7 @@ int Player::getTokens() const {
     Return: the amount of tokens the player now has after update
 */
 int Player::changeTokens(int amount) {
-    tokens = amount; //increase tokens by amount
+    tokens += amount; //increase/decrease tokens by amount (negative subtracts)
     return tokens;
 }
 
@@ -185,6 +185,30 @@ void Player::setBetAmount(int amount){
 }//end of setBetAmount
 
 /*
+    Function: buyAttackCards
+    Purpose: increase the amount of attack cards from shop by 1
+    Parameter(s): None
+    Return: None
+*/
+void Player::buyAttackCards(){
+    attackCards++; //increase count
+    cout << "Congrats on your new card! Use it wisely." << endl; //confirm purchase
+}//end of buyAttackCards
+
+int Player::getAttackCards() const  { return attackCards; }
+int Player::getViewingCards() const { return viewingCards; }
+/*
+    Function: buyViewingCards()
+    Purpose: increase the amount of viewing cards from shop by 1
+    Parameter(s): None
+    Return: None
+*/
+void Player::buyViewingCards(){
+    viewingCards++; //increase count
+    cout << "Congrats on your new card! Use it wisely." << endl; //confirm purchase
+}//end of buyViewingCards
+
+/*
     Function: useAttackCard
     Purpose: remove a random card from opponent's hand
     Parameter(s): Enemy
@@ -206,6 +230,7 @@ void Player::useAttackCard(Computer& enemy){
             int randomCard = rand() % numCards; //pick random card from 0-hand size
             enemy.discardCard(randomCard); //remove card from enemy hand
             attackCards--; //decrease amount of attack tarot cards
+            cout << "Attack card used!" << endl;
         }//end of else
     }//end of else
 }//end of useAttackCard
@@ -229,7 +254,7 @@ void Player::useViewingCard(Computer& enemy){
         }//end of if
         else{
             int randomCard = rand() % numCards; //pick random card from 0-hand size
-            opponent.at(randomCard).display(); //show random card on console
+            cout << "Viewing card used! Opponent has: " << opponent.at(randomCard).display() << endl;
             viewingCards--; //decrease amount of viweing tarot cards
         }//end of else
     }//end of else
