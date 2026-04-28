@@ -27,6 +27,7 @@ enum Key {
     KEY_B,
     KEY_D,
 	KEY_F,
+	KEY_H,
     KEY_R,
     KEY_Q,
     KEY_S
