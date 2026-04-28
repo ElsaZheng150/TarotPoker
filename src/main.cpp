@@ -206,6 +206,22 @@ void drawShop(InputParams inP, int selectedShopItem = 0, const string& shopMessa
     std::cout << "[<-] / [->] select item   [ENTER] buy   [SPACE] return to game" << endl;
 }
 
+//map a hand-rank int (0-8) to its poker name for showdown messages
+string handRankName(int rank) {
+    switch (rank) {
+        case 0: return "High Card";
+        case 1: return "Pair";
+        case 2: return "Two Pair";
+        case 3: return "Three of a Kind";
+        case 4: return "Straight";
+        case 5: return "Flush";
+        case 6: return "Full House";
+        case 7: return "Four of a Kind";
+        case 8: return "Straight Flush";
+        default: return "Unknown";
+    }
+}
+
 /*
     Function: displayWinner
     win (0), lose (1), draw(2)
@@ -232,34 +248,37 @@ void displayWinner(int whoWon, string& message){
     Parameters: player, amount of money being bet, message to the user, optional All in
     Return: None
 */
-void handlePlayerBet(Player& player, int&pot, string& message, int ALL = 777){
-    //default bet
-    std::cout << "Place CUSTOM BET or ALL IN [777]: ";
-    int numBetMoney; //hold amount of money being bet
-    if (!(cin >> numBetMoney)) {//take in user input
-        cin.clear();
-        cin.ignore(1000, '\n'); //clear input buffer if invalid input
-        numBetMoney = 0; //default to 0 if invalid input
+void handlePlayerBet(Player& player, int&pot, string& message, int minBet = 0){
+    //players must at least match the opponent's bet (call) or go all in if they can't afford to
+    int allIn = player.getCurrency();
+    int floor = (minBet < allIn) ? minBet : allIn; //all-in counts as a call when short-stacked
+    while (true) {
+        if (floor > 0) {
+            std::cout << "Opponent bet " << minBet << ". Place CUSTOM BET (>= " << floor << ") or ALL IN [" << allIn << "]: ";
+        } else {
+            std::cout << "Place CUSTOM BET or ALL IN [" << allIn << "]: ";
+        }
+        int numBetMoney; //hold amount of money being bet
+        if (!(cin >> numBetMoney)) {//take in user input
+            cin.clear();
+            cin.ignore(1000, '\n'); //clear input buffer if invalid input
+            std::cout << "Invalid input. Try again." << endl;
+            continue;
+        }
+        if (numBetMoney < floor) {
+            std::cout << "Bet must be at least " << floor << " to match the opponent." << endl;
+            continue;
+        }
+        if (numBetMoney > allIn) {
+            std::cout << "You only have " << allIn << " chips." << endl;
+            continue;
+        }
+        //valid bet at or above the floor, within currency (entering allIn here is naturally an all-in)
+        player.setBetAmount(numBetMoney);
+        player.setCurrency(allIn - numBetMoney);
+        pot += player.getBetAmount();
+        return;
     }
-    else {
-        //valid bet is greater than 0 and less than or equal to all currency (can't go over)
-        //default 0 if invalid input
-        if (numBetMoney > 0 && numBetMoney <= player.getCurrency()) {
-            player.setBetAmount(numBetMoney); //set amount if valid
-            player.setCurrency(player.getCurrency() - numBetMoney); //subtract from player's currency
-            pot += player.getBetAmount(); //add to pot
-        } //end of if
-        else if (numBetMoney == ALL) {
-            player.setBetAmount(player.getCurrency()); //set all in if 777 is entered
-            player.setCurrency(0); //subtract all from player's currency
-            pot += player.getBetAmount(); //add all in to pot
-        }
-        else {
-            //invalid bet, default 0
-            player.setBetAmount(0);
-            message = "No chips added to the pot.";
-        }
-	}//end of else
 }//end of handlePlayerBet
 
 void handleOpponentExchange(Computer& opponent, Deck& deck, string& message2, InputParams& inP) {
@@ -323,12 +342,65 @@ void handleOpponentBet(Computer& opponent, string& message, int& pot, InputParam
         message = "Opponent bet " + to_string(targetBet) + " chips."; //show opponent's action
     }
 
+    opponent.setBetAmount(targetBet); //record opponent's bet so the player handler can require a call/raise
     for (int i = 0; i < targetBet; i++) {
         opponent.setCurrency(opponent.getCurrency() - 1);
         pot++; //update how much is being bet
         drawGame(inP);
         std::this_thread::sleep_for(std::chrono::milliseconds(100)); //disable if this breaks things
     }
+}
+
+//opponent reacts to the player's bet: re-evaluates its hand and folds, calls, raises, or jams all-in.
+//Returns true when the opponent folds; caller awards the pot to the player and ends the round.
+bool handleOpponentResponse(Computer& opponent, int playerBet, string& message, int& pot, InputParams& inP) {
+    int alreadyIn = opponent.getBetAmount(); //chips already wagered this betting round
+    int chips = opponent.getCurrency();      //chips still available
+    if (alreadyIn >= playerBet || (chips <= 0 && alreadyIn > 0)) {
+        message = "Opponent stays at " + std::to_string(alreadyIn) + " chips.";
+        return false; //already calling/raising or has nothing left to move
+    }
+
+    int rank = opponent.handEvaluator(opponent.getHand()); //re-evaluate hand strength
+    int callAmount = playerBet - alreadyIn; //extra chips needed to match the player
+    bool shortStack = (callAmount > chips); //wants to call but cannot fully afford it
+
+    //fold logic: weak hand AND the call would cost a meaningful slice of remaining chips (>= 40%).
+    //Strong hands never fold; tiny calls are always made.
+    if (rank < 2 && chips > 0) {
+        int callCost = shortStack ? chips : callAmount;
+        if (callCost * 5 >= chips * 2) {
+            message = "Opponent folded. You win " + std::to_string(pot) + " chips!";
+            inP.player.setCurrency(inP.player.getCurrency() + pot);
+            pot = 0;
+            return true;
+        }
+    }
+
+    //commit the call (or all-in if short-stacked)
+    int total = shortStack ? chips : callAmount;
+    int remaining = chips - total;
+    int raise = 0;
+    if (!shortStack) {
+        if (rank >= 7)      raise = remaining;               //monster hand: jam the rest in
+        else if (rank >= 4) raise = (int)(remaining * 0.40); //strong hand: meaningful raise
+        else if (rank >= 2) raise = (int)(remaining * 0.10); //decent hand: small raise
+    }
+    total += raise;
+    if (total > chips) total = chips;
+
+    for (int i = 0; i < total; i++) {
+        opponent.setCurrency(opponent.getCurrency() - 1);
+        pot++;
+        drawGame(inP);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    opponent.setBetAmount(alreadyIn + total); //updated total wager this round
+
+    if (shortStack)     message = "Opponent went all in with " + std::to_string(opponent.getBetAmount()) + " chips.";
+    else if (raise > 0) message = "Opponent raised to "       + std::to_string(opponent.getBetAmount()) + " chips.";
+    else                message = "Opponent called with "     + std::to_string(opponent.getBetAmount()) + " chips.";
+    return false;
 }
 
 /*
@@ -536,6 +608,9 @@ void compareHands(Player& human, Computer& enemy, string& message, int& pot) {
 		pot = 0; //reset pot after split
     }
     displayWinner(isWinner, message); //display who the winner is
+    //append both hand types so the showdown screen states what each side held
+    message += "You: " + handRankName(playerHandRank) + "\n";
+    message += "Opponent: " + handRankName(enemyHandRank) + "\n";
 }//end of compareHands
 
 /*
@@ -930,19 +1005,30 @@ int main() {
                 cin >> useCard;
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useAttackCard(opponent);
+                    cout << "Press ENTER to continue..." << endl;
+                    cin.ignore(10000, '\n'); cin.get(); //let the player read the result before the screen redraws
                 }//end of if
                 cout << "Do you want to use a viewing card before making a bet? [y/n]" << endl;
                 cin >> useCard;
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useViewingCard(opponent);
+                    cout << "Press ENTER to continue..." << endl;
+                    cin.ignore(10000, '\n'); cin.get();
                 }//end of if
 
                 message2 = "Your turn to bet!";
 				drawGame(inP);
                 if (alreadyBet == false) {
-                    handlePlayerBet(player, pot, message); //let the player make a bet
+                    handlePlayerBet(player, pot, message, opponent.getBetAmount()); //let the player make a bet (must call the opponent)
                     alreadyBet = true;
-                    message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed."; //show them what they bet
+                    bool folded = handleOpponentResponse(opponent, player.getBetAmount(), message, pot, inP); //opponent must call, raise, jam, or fold
+                    if (folded) { //fold ends the round; jump to showdown so SPACE goes to shop
+                        message2 = ""; message3 = "";
+                        gameState = 5; readyForNextGameState = true; readyForShop = true;
+                        opponentTurnOver = true; alreadyDrew = true;
+                    } else {
+                        message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed.";
+                    }
                     drawGame(inP);
                 }
 			}
@@ -980,18 +1066,30 @@ int main() {
                 cin >> useCard;
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useAttackCard(opponent);
+                    cout << "Press ENTER to continue..." << endl;
+                    cin.ignore(10000, '\n'); cin.get();
                 }//end of if
                 cout << "Do you want to use a viewing card? [y/n]" << endl;
                 cin >> useCard;
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useViewingCard(opponent);
+                    cout << "Press ENTER to continue..." << endl;
+                    cin.ignore(10000, '\n'); cin.get();
                 }//end of if
 
                 message2 = "Your turn to bet!";
                 drawGame(inP);
                 if (alreadyBet == false) {
-                    handlePlayerBet(player, pot, message); //allow bets to be placed
+                    handlePlayerBet(player, pot, message, opponent.getBetAmount()); //allow bets to be placed (must call the opponent)
                     alreadyBet = true; //ensure bet was placed
+                    bool folded = handleOpponentResponse(opponent, player.getBetAmount(), message, pot, inP); //opponent must call, raise, jam, or fold
+                    if (folded) { //fold ends the round; jump to showdown so SPACE goes to shop
+                        message2 = ""; message3 = "";
+                        gameState = 5; readyForNextGameState = true; readyForShop = true;
+                        opponentTurnOver = true; alreadyDrew = true;
+                        drawGame(inP);
+                        continue;
+                    }
                     message2 = "Player bet: " + to_string(player.getBetAmount()) + " chips.\nBets closed."; //update message
                     drawGame(inP);
                 }

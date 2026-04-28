@@ -227,6 +227,7 @@ void Player::useAttackCard(Computer& enemy){
             int randomCard = rand() % numCards; //pick random card from 0-hand size
             enemy.discardCard(randomCard); //remove card from enemy hand
             attackCards--; //decrease amount of attack tarot cards
+            cout << "Attack card used!" << endl;
         }//end of else
     }//end of else
 }//end of useAttackCard
@@ -250,7 +251,7 @@ void Player::useViewingCard(Computer& enemy){
         }//end of if
         else{
             int randomCard = rand() % numCards; //pick random card from 0-hand size
-            opponent.at(randomCard).display(); //show random card on console
+            cout << "Viewing card used! Opponent has: " << opponent.at(randomCard).display() << endl;
             viewingCards--; //decrease amount of viweing tarot cards
         }//end of else
     }//end of else
