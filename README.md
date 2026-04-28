@@ -2,8 +2,16 @@
 Five card draw poker with tarot cards to influence player and opponent cards
 
 Game Description
-Five card draw poker
+Five card draw poker (Not Texas Hold em)
 Game play: We are using mostly standard five card draw poker rules. Each player gets five cards and can place afterwards. Then they can replace or keep the cards they have. In our game, they will also have tarot cards that can affect your cards or the cards of your opponent(s). Before hands are revealed, players place bets again. The player with the best hand or last one remaining if everyone else has folded is the winner.
+
+RULES:
+1. Five cards are dealt from a standard 52 card deck. Player and Enemy AI both get 100 chips to start off with. The player does not get any tokens for the tarot shop to start off. 
+2. Player and computer have 1 chance to swap out cards. 
+3. Before placing bets, the player may use an attack card to hurt the computer's hand or a viewing card to see the computer's hand to help them decide on what to bet.
+4. At this point bets will be placed and they must be the same. Both are allowed to increase bets as they see fit, but bets must be equal. Players are forced to bet to increase how competitive the game is.
+5. Hands are compared and whoever wins gets the pot (chips and tokens).
+*The tarot shop is open for shopping if the player has tokens.
 
 Planned Features (game mechanics, formats, AI, interfaces) 
 tarot cards that can affect the your or other player’s card (like Balatro)
