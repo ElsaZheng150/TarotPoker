@@ -138,7 +138,7 @@ int Player::getTokens() const {
     Return: the amount of tokens the player now has after update
 */
 int Player::changeTokens(int amount) {
-    tokens = amount; //increase tokens by amount
+    tokens += amount; //increase/decrease tokens by amount (negative subtracts)
     return tokens;
 }
 

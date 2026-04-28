@@ -36,6 +36,7 @@ struct InputParams {
 	string& message3;
     Computer& opponent; //basic AI opponent
     int& pot; //total chips being bet on
+    int& gameState; //current game phase (5 = showdown, reveal opponent hand)
 };
 
 /*
@@ -71,13 +72,6 @@ void drawUI(Player& player, Deck& deck, int selected, const string& message) {
     std::cout << endl;
 
     std::cout << "--- Controls ---" << endl;
-    std::cout << "[<] [>]  Navigate hand" << endl;
-    std::cout << "[1]      Draw a card" << endl;
-    std::cout << "[2]      Discard selected card" << endl;
-    std::cout << "[3]      Increase selected card value" << endl;
-    std::cout << "[4]      Cycle selected card suit" << endl;
-    std::cout << "[D]      View deck" << endl;
-    std::cout << "[R]      End round (return cards)" << endl; //will check who wins (player v computer)
 	std::cout << "[S]      Start game" << endl;
     std::cout << "[Q]      Quit" << endl;
 
@@ -111,19 +105,14 @@ void drawGame(const InputParams& inP) {
     }
     else {
         std::cout << "Opponent hand: \n\n";
+        bool reveal = (inP.gameState == 5); //only reveal opponent's hand at showdown
+        //selector cursor is not shown on opponent's hand outside of an attack/viewing action
         for (int i = 0; i < inP.opponent.handSize(); i++) {
-            if (i == inP.selected) {
-                // ANSI inverse colors for highlighting
-                std::cout << " \033[7m " << inP.opponent.getHand()[i].display() << " \033[0m ";
-				// 'hide' code: Replaces the oppenet's hand with ?? to hide the suit and value from the player (highlighted)
-				// For testing purposes, the opponent's hand will be shown but the code is here to make the switch
-                // std::cout << " \033[7m \xe2\x81\x87  \033[0m ";
-                
-            }
-            else {
+            if (reveal) {
                 std::cout << "  " << inP.opponent.getHand()[i].display() << "  ";
-				// Replaces the oppenet's hand with ?? to hide the suit and value from the player
-				//std::cout << " \xe2\x81\x87  ";
+            } else {
+                // Replaces the oppenet's hand with ?? to hide the suit and value from the player
+                std::cout << " \xe2\x81\x87  ";
             }
         }
         std::cout << endl;
@@ -169,15 +158,52 @@ void drawGame(const InputParams& inP) {
     Parameters: standard ones listed at top
     Return: None, print to console
 */
-void drawShop(InputParams inP) {
+void drawShop(InputParams inP, int selectedShopItem = 0, const string& shopMessage = "") {
     clearScreen(); //remove any previous text
     //display what the Tarot shop will look like
     std::cout << "=== Tarot Poker - Shop ===" << endl;
     std::cout << endl;
-    std::cout << "|---| Item 1 |---|     |---| Item 2 |---|     |---| Item 3 |---|" << endl;
-    std::cout << endl << endl << endl << endl << endl << endl << endl << endl << endl << endl;
+    std::cout << "Tokens: " << inP.player.getTokens() << endl; //show current token count
     std::cout << endl;
-    std::cout << "Press [SPACE] to return to the game and up the ante." << endl;
+
+    //three shop slots: 0 = Attack, 1 = Viewing, 2 = (reserved)
+    const string itemNames[3] = {"Attack Card", "Viewing Card", "Coming Soon"};
+    const int itemCosts[3] = {50, 50, 0};
+
+    //top row: framed labels with the selected item highlighted (ANSI inverse)
+    for (int i = 0; i < 3; i++) {
+        if (i == selectedShopItem) {
+            std::cout << " \033[7m|---| Item " << (i + 1) << " |---|\033[0m ";
+        } else {
+            std::cout << " |---| Item " << (i + 1) << " |---| ";
+        }
+        if (i < 2) std::cout << "   ";
+    }
+    std::cout << endl;
+
+    //second row: item names
+    for (int i = 0; i < 3; i++) {
+        string label = itemNames[i];
+        //pad to 17 chars to align under the framed labels
+        while ((int)label.size() < 17) label = " " + label + (label.size() % 2 == 0 ? "" : " ");
+        if (i == selectedShopItem) std::cout << " \033[7m" << label << "\033[0m ";
+        else                       std::cout << " "       << label << " ";
+        if (i < 2) std::cout << "   ";
+    }
+    std::cout << endl;
+
+    //third row: cost
+    for (int i = 0; i < 3; i++) {
+        string cost = (itemCosts[i] > 0) ? (to_string(itemCosts[i]) + " tokens") : "--";
+        while ((int)cost.size() < 17) cost = " " + cost + (cost.size() % 2 == 0 ? "" : " ");
+        std::cout << " " << cost << " ";
+        if (i < 2) std::cout << "   ";
+    }
+    std::cout << endl << endl << endl << endl << endl << endl << endl;
+
+    if (!shopMessage.empty()) std::cout << shopMessage << endl;
+    std::cout << endl;
+    std::cout << "[<-] / [->] select item   [ENTER] buy   [SPACE] return to game" << endl;
 }
 
 /*
@@ -488,17 +514,25 @@ void compareHands(Player& human, Computer& enemy, string& message, int& pot) {
         }//end of for loop
     }//end of else
 
+    //token payout scales with the winning hand's rank: (rank+1) * 5
+    int playerTokens = (playerHandRank + 1) * 5;
+    int enemyTokens  = (enemyHandRank  + 1) * 5;
+
     if (isWinner == 0) {
 		human.setCurrency(human.getCurrency() + pot); //give player the pot if they win
+		human.changeTokens(playerTokens); //award tokens scaled by winning hand rank
 		pot = 0; //reset pot after win
     }
     else if(isWinner == 1){
         enemy.setCurrency(enemy.getCurrency() + pot); //give enemy the pot if they win
+		enemy.changeTokens(enemyTokens); //award tokens scaled by winning hand rank
 		pot = 0; //reset pot after win
     }
     else {
 		human.setCurrency(human.getCurrency() + pot / 2); //split the pot if tie
 		enemy.setCurrency(enemy.getCurrency() + pot / 2); //split the pot if tie
+		human.changeTokens(playerTokens / 2); //split the token reward on a tie
+		enemy.changeTokens(enemyTokens  / 2);
 		pot = 0; //reset pot after split
     }
     displayWinner(isWinner, message); //display who the winner is
@@ -538,15 +572,18 @@ int main() {
 	int ante = 5; // initial bet amount 
     int alreadyBet = false; //check betting status
     int alreadyDrew = false; //check status of drawing cards
+    int discardCount = 0; //total discards this round (capped at 5 during draw phase)
+    int drawCount = 0;    //total manual draws this round (capped at 5 during draw phase)
     int opponentTurnOver = false; //check what computer is doing
 	bool readyForNextGameState = false; //check if game can move on
 	bool readyForShop = false; //check if can use shop
+	int selectedShopItem = 0; //arrow-key cursor inside the shop (0=Attack, 1=Viewing, 2=reserved)
 
     //intialize enemy but do not show hand
     Computer opponent; //Basic AI enemy
 
     //declare parameters for UI functions
-	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot};
+	InputParams inP {player, deck, selected, message, message2, message3, opponent, pot, gameState};
 
     //display the game
     drawUI(player, deck, selected, message);
@@ -719,8 +756,14 @@ int main() {
 						betChips = 0;
 					}
                     if (readyForShop) { //check if users can buy things from the shop
+                        //return both hands to the deck now that the player has finished viewing the showdown
+                        player.returnAllToDeck(deck);
+                        opponent.returnAllToDeck(deck);
+                        deck.shuffle(); //shuffle cards for next round
+                        selected = 0; //reset which card is selected
                         state = 2;
-                        drawShop(inP);
+                        selectedShopItem = 0; //reset shop cursor on entry
+                        drawShop(inP, selectedShopItem);
                     }
                     else if (!readyForShop) { 
 						drawGame(inP);
@@ -737,8 +780,11 @@ int main() {
 					if (deck.isEmpty()) { //check if deck is empty before drawing
                         message3 = "The deck is empty!";
                     }
+                    else if (gameState == 3 && drawCount >= 5) { //cap draws per round
+                        message3 = "Draw limit reached (5 draws per round).";
+                    }
                     //comment out if testing requires more than 5 cards
-					if (player.handSize() >= 5) { //check if hand is full before drawing
+					else if (player.handSize() >= 5) { //check if hand is full before drawing
                         message3 = "Hand is full. Discard a card before drawing.";
                     }
                     else { //adding cards to hand
@@ -746,6 +792,7 @@ int main() {
                         message2 = "Drew: " + drawn.display(); //display which card was selected
                         player.addCard(drawn); //add card in
                         if (player.handSize() == 1) selected = 0; //change card being selected to the only card
+                        if (gameState == 3) drawCount++; //only count draws in the draw/discard phase
                     }
                     drawGame(inP);
                     break;
@@ -757,6 +804,11 @@ int main() {
                         drawGame(inP);
                         break;
                     }
+                    if (discardCount >= 5) { //cap discards per round
+                        message3 = "Discard limit reached (5 discards per round).";
+                        drawGame(inP);
+                        break;
+                    }
                     if (!player.hasCards()) {
                         message3 = "Hand is empty. Nothing to discard.";
                     }
@@ -765,6 +817,7 @@ int main() {
                         player.discardCard(selected); //discard card
                         if (selected >= player.handSize() && selected > 0)
                             selected--; //change which card is being selected
+                        discardCount++; //consume one discard slot
                         //TODO: add a counter to keep track of how many cards the player has discarded (or use an existing var/func)
                         //TODO: update draw() or KEY_1 case to not allow the player to draw more than discarded
                         //TODO: limit the amount of times a player can exchange to once per round (currently they can keep discarding and drawing)
@@ -795,12 +848,9 @@ int main() {
                     }
                     else {
                         compareHands(player, opponent, message, pot); //check who has better hand
-                        //returns all to deck after game is done
-                        player.returnAllToDeck(deck);
-                        opponent.returnAllToDeck(deck);
-                        deck.shuffle(); //shuffle cards for next round
-                        selected = 0; //reset which card is selected
-                        message2 = "All cards returned to deck and shuffled.\nPress SPACE to enter the shop."; //instructions for user
+                        //hands stay on the table so the player can see both at showdown;
+                        //they are returned to the deck when the player presses SPACE to enter the shop
+                        message2 = "Press SPACE to enter the shop."; //instructions for user
 						readyForNextGameState = true;
                     }
                     drawGame(inP);
@@ -881,17 +931,11 @@ int main() {
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useAttackCard(opponent);
                 }//end of if
-                else{
-                    cout << "That's ok. Gambling time!" << endl;
-                }//end of else
                 cout << "Do you want to use a viewing card before making a bet? [y/n]" << endl;
                 cin >> useCard;
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useViewingCard(opponent);
                 }//end of if
-                else{
-                    cout << "That's ok. Gambling time!" << endl;
-                }//end of else
 
                 message2 = "Your turn to bet!";
 				drawGame(inP);
@@ -937,17 +981,11 @@ int main() {
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useAttackCard(opponent);
                 }//end of if
-                else{
-                    cout << "That's ok. Gambling time!" << endl;
-                }//end of else
                 cout << "Do you want to use a viewing card? [y/n]" << endl;
                 cin >> useCard;
                 if(useCard == 'y' || useCard == 'Y'){
                     player.useViewingCard(opponent);
                 }//end of if
-                else{
-                    cout << "That's ok. Gambling time!" << endl;
-                }//end of else
 
                 message2 = "Your turn to bet!";
                 drawGame(inP);
@@ -985,6 +1023,8 @@ int main() {
 
                     alreadyBet = false; //reset bet state
                     alreadyDrew = false; //reset draw state
+                    discardCount = 0; //reset discard counter for next round
+                    drawCount = 0;    //reset draw counter for next round
 					opponentTurnOver = false; //reset opponent turn state
                     readyForNextGameState = false; //reset for next state in new round
 
@@ -1002,33 +1042,36 @@ int main() {
                     cout << endl << "Press any key to return to the shop..." << endl;
                     continue;
                 }
-                case KEY_1:{
-                    //no op purchase just to exercise the token flow
-                    const int cost = 50; //default cost is 50 tokens to by a tarot card
-
-                    char userShopChoice;
-
-                    //ask user which card they want to buy
-                    cout << "Would you like to purchase a tarot card for 50 tokens?" << endl;
-                    cout << "Attack Card [A/a], Viewing Card [V/v], No [N/n]" << endl; //shop menu
-                    cin >> userShopChoice;
-
-                    if(player.getTokens() < cost){ //prevent user from buy if they don't have enough
-                        message3 = "Not enough tokens (need " + to_string(cost) + ", have " + to_string(player.getTokens()) + ").";
+                case KEY_LEFT: { //move shop cursor left
+                    selectedShopItem = (selectedShopItem + 2) % 3;
+                    drawShop(inP, selectedShopItem);
+                    break;
+                }
+                case KEY_RIGHT: { //move shop cursor right
+                    selectedShopItem = (selectedShopItem + 1) % 3;
+                    drawShop(inP, selectedShopItem);
+                    break;
+                }
+                case KEY_ENTER: { //buy the currently selected item
+                    const int cost = 50; //default cost is 50 tokens to buy a tarot card
+                    string shopMessage;
+                    if (selectedShopItem == 2) {
+                        shopMessage = "That slot isn't available yet.";
                     }
-                    else{
-                        if(userShopChoice == 'A' || userShopChoice == 'a'){
-                            player.changeTokens(-cost);
-                            message3 = "Bought an attack card for " + to_string(cost) + " tokens.";
-                            player.buyAttackCards();
-                        }//end of if
-                        if(userShopChoice == 'V' || userShopChoice == 'v'){
-                            player.changeTokens(-cost);
-                            message3 = "Bought a viewing card for " + to_string(cost) + " tokens.";
-                            player.buyViewingCards();
-                        }//end of if
+                    else if (player.getTokens() < cost) { //prevent user from buying if they don't have enough
+                        shopMessage = "Not enough tokens (need " + to_string(cost) + ", have " + to_string(player.getTokens()) + ").";
                     }
-                    drawShop(inP);
+                    else if (selectedShopItem == 0) {
+                        player.changeTokens(-cost);
+                        player.buyAttackCards();
+                        shopMessage = "Bought an attack card for " + to_string(cost) + " tokens.";
+                    }
+                    else if (selectedShopItem == 1) {
+                        player.changeTokens(-cost);
+                        player.buyViewingCards();
+                        shopMessage = "Bought a viewing card for " + to_string(cost) + " tokens.";
+                    }
+                    drawShop(inP, selectedShopItem, shopMessage);
                     break;
                 }
                 case KEY_Q: { //leave (quit)
@@ -1036,7 +1079,7 @@ int main() {
                     break;
                 }
                 default: {
-                    drawShop(inP);
+                    drawShop(inP, selectedShopItem);
                     break;
 				}
             }
