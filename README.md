@@ -126,12 +126,27 @@ External Libraries:
 
 How to compile and run the program:
 1. Clone the repository on Github
-2. Open on VS Code
-3. Install a C++ compiler if needed
-4. Set up any configurations needed
-5. Run the game using VS Code
+2. Open a terminal in the TarotPoker folder
+
+   ```cd "PATH TO SOURCE CODE" ```
+4. Install a C++ compiler if needed (MinGW on Windows, Xcode Command Line Tools on macOS)
+5. Run the appropriate compile command below
+6. Run the generated executable
+
+Windows (Command Prompt or PowerShell):
+
+
+```g++ -std=c++17 -Iinclude src/main.cpp src/Card.cpp src/Deck.cpp src/Player.cpp src/Input.cpp src/Computer.cpp -o TarotPoker.exe```
+
+Then run: ```TarotPoker.exe```
+
+macOS (Terminal):
+
+```g++ -std=c++17 -Iinclude src/main.cpp src/Card.cpp src/Deck.cpp src/Player.cpp src/Input.cpp src/Computer.cpp -o TarotPoker```
+
+Then run: ```./TarotPoker```
 
 How to play the game:
 1. Ensure the previous set of instructions regarding compiling has been met
-2. Hit run
+2. Run the executable
 3. Follow the console instructions and have fun!
