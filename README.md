@@ -113,11 +113,16 @@ Classes:
    h) Option for tarot shop is opened. Player can buy cards if they want and/or can.
    i) Player can continue playing until they decide to quit or are broke. 
 
-External Libraries
-string library: to use string variables for console output
-iostream library: for standard input and output
-vector library: use vectors to keep track of cards in the deck and what the players have
-cstdlib: for random number generation
+External Libraries:
+   - \<string\>: to use string variables for console output
+   - \<iostream\>: for standard input and output
+   - \<cstdlib\>: for random number generation
+   - \<ctime\>: for a unique seed based on current time for random number generation
+   - \<vector\>: use vectors to keep track of cards in the deck and what the players have
+   - \<map\>: to keep track of card frequencies for determining hand ranks
+   - \<algorithm\>: for sorting to determine hand ranks and to help with opponent AI
+   - \<chrono\>: provides time measurements that allow for pausing the program for a specified amount of time
+   - \<thread\>: provides the actual pausing functionality for the above
 
 How to compile and run the program:
 1. Clone the repository on Github
